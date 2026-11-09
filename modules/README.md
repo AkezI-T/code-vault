@@ -20,6 +20,11 @@
 | mspm0g3507 | [button](microcontrollers/mspm0g3507/button/README.md) | C | 消抖、短按、双击与长按事件 |
 | mspm0g3507 | [i2c-line-sensor](microcontrollers/mspm0g3507/i2c-line-sensor/README.md) | C | I2C 八路巡线数据读取 |
 | mspm0g3507 | [i2c-jy901s](microcontrollers/mspm0g3507/i2c-jy901s/README.md) | C | I2C JY901S 姿态角读取 |
+| mspm0g3507 | [uart-bno08x-rvc](microcontrollers/mspm0g3507/uart-bno08x-rvc/README.md) | C | UART RVC 字节流解析 |
+| mspm0g3507 | [uart-imu-55](microcontrollers/mspm0g3507/uart-imu-55/README.md) | C | UART 0x55 IMU 数据帧解析 |
+| mspm0g3507 | [gpio-ultrasonic](microcontrollers/mspm0g3507/gpio-ultrasonic/README.md) | C | 可配置 GPIO 超声波测距 |
+| mspm0g3507 | [timer-ultrasonic](microcontrollers/mspm0g3507/timer-ultrasonic/README.md) | C | 捕获脉宽与距离换算 |
+| mspm0g3507 | [i2c-spi-ssd1306](microcontrollers/mspm0g3507/i2c-spi-ssd1306/README.md) | C | 可接入 I2C/SPI 的 SSD1306 显示核心 |
 | k230 | [alpha-beta-tracker](microcontrollers/k230/alpha-beta-tracker/README.md) | Python | 可配置一维位置与速度估计 |
 
 文件存放规则见 [docs/architecture.md](../docs/architecture.md)，模块使用说明模板见 [docs/module-template.md](../docs/module-template.md)。

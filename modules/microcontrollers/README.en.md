@@ -18,6 +18,11 @@ Every `<module-name>/` root must contain a default Simplified Chinese `README.md
 | mspm0g3507 | [button](mspm0g3507/button/README.en.md) | C | Debounce, short, double and long press events |
 | mspm0g3507 | [i2c-line-sensor](mspm0g3507/i2c-line-sensor/README.en.md) | C | Eight-channel I2C line-sensor data |
 | mspm0g3507 | [i2c-jy901s](mspm0g3507/i2c-jy901s/README.en.md) | C | JY901S attitude angles over I2C |
+| mspm0g3507 | [uart-bno08x-rvc](mspm0g3507/uart-bno08x-rvc/README.en.md) | C | UART RVC byte-stream parsing |
+| mspm0g3507 | [uart-imu-55](mspm0g3507/uart-imu-55/README.en.md) | C | UART 0x55 IMU frame parsing |
+| mspm0g3507 | [gpio-ultrasonic](mspm0g3507/gpio-ultrasonic/README.en.md) | C | Configurable GPIO ultrasonic ranging |
+| mspm0g3507 | [timer-ultrasonic](mspm0g3507/timer-ultrasonic/README.en.md) | C | Captured pulse width and distance conversion |
+| mspm0g3507 | [i2c-spi-ssd1306](mspm0g3507/i2c-spi-ssd1306/README.en.md) | C | SSD1306 display core with I2C/SPI transport callbacks |
 | k230 | [alpha-beta-tracker](k230/alpha-beta-tracker/README.en.md) | Python | Configurable one-dimensional position and velocity estimation |
 
 Host-side development tools live in [tools/microcontrollers/](../../tools/microcontrollers/README.en.md).

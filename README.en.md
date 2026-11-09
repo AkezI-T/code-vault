@@ -44,4 +44,4 @@ Replace `<specific-paths>` with the paths to commit. Store credentials in the en
 
 ## Availability
 
-This is a private repository. Extracted modules include their own `LICENSE`; follow the license in each module directory. Other content requires an explicit license or permission from the owner.
+This is a private repository. See each module's `LICENSE` or `SOURCE.md` for its origin and usage rights. Licensed content follows its stated terms. Content whose source provides no license carries no additional license grant; reuse and redistribution require permission from its rights holder.

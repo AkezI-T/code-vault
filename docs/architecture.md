@@ -12,7 +12,8 @@ code-vault/
         <module-name>/
           README.md
           README.en.md
-          LICENSE
+          LICENSE      (when a license is supplied)
+          SOURCE.md    (upstream origin and authorization status)
           include/     (public C headers, when needed)
           src/
           <language-specific build or dependency files>
