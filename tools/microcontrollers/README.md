@@ -1,7 +1,9 @@
 # 单片机工具
 
+简体中文 | [English](README.en.md)
+
 存放在电脑端使用的单片机开发工具，例如烧录辅助、串口数据处理、固件打包和调试辅助工具。每个工具使用英文目录名，放在 `<tool-name>/` 下。
 
 每个工具的说明包含运行环境、依赖、支持的设备、使用命令，以及涉及硬件操作时的连接要求。
 
-单片机上运行的固件代码放在[单片机模块目录](../../modules/microcontrollers/README.md)。
+单片机上运行的固件代码放在 [modules/microcontrollers/](../../modules/microcontrollers/README.md)。

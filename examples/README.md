@@ -1,9 +1,11 @@
-# Usage examples
+# 使用示例
 
-Place runnable examples at `<domain>/<module-name>/` to match the module catalog.
+简体中文 | [English](README.en.md)
 
-Each example includes a README stating the required runtime, dependency installation, working directory, execution command, and expected behavior. Declare dependencies through the language's package system and call the module's public API.
+将可运行的示例放在 `<domain>/<module-name>/` 下，与模块目录对应。
 
-Use placeholder configuration for external services. Keep generated output and local credentials outside version control.
+每个示例提供中英文 README，说明运行环境、依赖安装、执行目录、运行命令和预期行为。通过所用语言的包管理方式声明依赖，并调用模块的公开 API。
 
-Browse the [module catalog](../modules/README.md) to choose a module.
+外部服务配置使用占位值，生成文件和本地凭证不纳入版本控制。
+
+通过 [modules/](../modules/README.md) 选择模块。

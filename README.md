@@ -17,11 +17,13 @@
 | [docs/module-template.md](docs/module-template.md) | 新模块 README 的编写起点 |
 | [scripts/](scripts/README.md) | 仓库维护脚本 |
 
+所有 README 均提供默认简体中文 `README.md` 与英文 `README.en.md`，内容同步维护，顶部提供双向语言切换链接。
+
 ## 添加模块
 
 1. 选择功能领域，并使用小写字母和连字符命名模块，例如 `modules/networking/http-client/`。
 2. 将实现代码放入 `src/`，通过所用语言的常规入口公开受支持的接口。
-3. 在每个 `<module-name>/` 根目录创建简体中文 `README.md`，参考[模块说明模板](docs/module-template.md)写清接入步骤、公开 API 和完整调用示例，并添加该语言所需的依赖清单。
+3. 在每个 `<module-name>/` 根目录创建默认简体中文 `README.md` 和英文 `README.en.md`，两版内容同步维护并提供双向语言切换链接，参考[模块说明模板](docs/module-template.md)写清接入步骤、公开 API 和完整调用示例，并添加该语言所需的依赖清单。
 4. 按需将模块专用的测试和小型运行资源放在模块内部。
 5. 如需演示用法，在 `examples/<domain>/<module-name>/` 中添加可运行的示例。
 6. 将模块登记到[模块目录](modules/README.md)。

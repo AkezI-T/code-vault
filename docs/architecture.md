@@ -51,9 +51,13 @@ The domain and module directories above describe the layout for added code. The 
 
 Use English kebab-case directory names. Microcontroller firmware modules live in `modules/microcontrollers/`; host-side microcontroller development tools live in `tools/microcontrollers/`. Create additional domains as needed.
 
+## README languages
+
+Every README location must provide a default Simplified Chinese `README.md` and an English `README.en.md` in the same directory. Keep both versions equivalent, including usage examples and API details, and add reciprocal language links at the top. Links to other READMEs use the matching language version.
+
 ## Module boundaries
 
-A module has one documented responsibility, a supported public entry point, and explicit dependencies. Every `<module-name>/` directory must contain a `README.md` written in Simplified Chinese. It documents requirements, integration, configuration, a complete minimal usage example, and every public API using the [module template](module-template.md).
+A module has one documented responsibility, a supported public entry point, and explicit dependencies. Every `<module-name>/` directory must contain both README language versions as specified above. It documents requirements, integration, configuration, a complete minimal usage example, and every public API using the [module template](module-template.md).
 
 For each public API, document the exact signature or import, purpose, parameters and their types, units, valid ranges and defaults where applicable, return values, errors, and required call order. State applicable initialization, resource ownership, buffer lifetime, blocking behavior, timeout units, task or interrupt restrictions, and cleanup requirements. Mark unsupported operations explicitly rather than inventing interfaces.
 
@@ -79,7 +83,7 @@ The default branch is `main`. A release identifies its included modules and API 
 
 1. Select a functional domain and module name.
 2. Create the module's source entry point and required manifest.
-3. Create `README.md` in the module root using the [module template](module-template.md), and complete its Simplified Chinese usage and public API documentation.
+3. Create `README.md` and `README.en.md` in the module root using the [module template](module-template.md), and complete equivalent Chinese and English usage and public API documentation.
 4. Add any necessary tests and a focused usage example.
 5. List it in the [module catalog](../modules/README.md).
 

@@ -1,5 +1,7 @@
-# Repository scripts
+# 仓库维护脚本
 
-Store repository maintenance scripts here. A script's usage documentation states its purpose, runtime, working directory, arguments, and generated output location.
+简体中文 | [English](README.en.md)
 
-Scripts used only by one module belong in that module's own `scripts/` directory.
+在此存放仓库维护脚本。脚本的使用说明写清用途、运行环境、执行目录、参数和生成文件的位置。
+
+仅供某个模块使用的脚本放在该模块自己的 `scripts/` 目录中。
