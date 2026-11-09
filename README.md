@@ -9,12 +9,12 @@
 | 位置 | 内容 |
 | --- | --- |
 | [modules/](modules/README.md) | 按功能领域组织的可复用模块 |
-| [单片机模块](modules/microcontrollers/README.md) | 单片机固件模块、驱动和协议 |
+| [modules/microcontrollers/](modules/microcontrollers/README.md) | 单片机固件模块、驱动和协议 |
 | [tools/](tools/README.md) | 按功能领域组织的开发工具 |
-| [单片机工具](tools/microcontrollers/README.md) | 电脑端使用的单片机开发工具 |
+| [tools/microcontrollers/](tools/microcontrollers/README.md) | 电脑端使用的单片机开发工具 |
 | [examples/](examples/README.md) | 演示模块用法的小型程序 |
-| [架构说明](docs/architecture.md) | 文件归属、模块边界与依赖规则 |
-| [模块说明模板](docs/module-template.md) | 新模块 README 的编写起点 |
+| [docs/architecture.md](docs/architecture.md) | 文件归属、模块边界与依赖规则 |
+| [docs/module-template.md](docs/module-template.md) | 新模块 README 的编写起点 |
 | [scripts/](scripts/README.md) | 仓库维护脚本 |
 
 ## 添加模块
