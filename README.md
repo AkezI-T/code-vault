@@ -1,29 +1,31 @@
 # Code Vault
 
-A personal collection of reusable code modules, runnable examples, and supporting documentation.
+简体中文 | [English](README.en.md)
 
-## Find a place for a file
+个人模块化代码仓库，用于积累可复用的代码模块、可运行的示例及配套文档。
 
-| Location | Contents |
+## 文件存放位置
+
+| 位置 | 内容 |
 | --- | --- |
-| [modules/](modules/README.md) | Reusable modules, grouped by functional domain |
-| [examples/](examples/README.md) | Small programs that demonstrate module usage |
-| [docs/architecture.md](docs/architecture.md) | File placement, boundaries, and dependency rules |
-| [docs/module-template.md](docs/module-template.md) | Starting point for a module README |
-| [scripts/](scripts/README.md) | Repository maintenance scripts |
+| [modules/](modules/README.md) | 按功能领域组织的可复用模块 |
+| [examples/](examples/README.md) | 演示模块用法的小型程序 |
+| [架构说明](docs/architecture.md) | 文件归属、模块边界与依赖规则 |
+| [模块说明模板](docs/module-template.md) | 新模块 README 的编写起点 |
+| [scripts/](scripts/README.md) | 仓库维护脚本 |
 
-## Add a module
+## 添加模块
 
-1. Choose a domain and a descriptive kebab-case name, such as `modules/networking/http-client/`.
-2. Put implementation files in `src/` and expose the supported API through the language's normal entry point.
-3. Add a module README using the [template](docs/module-template.md), along with the dependency manifest required by that language.
-4. Keep module-specific tests and small runtime assets inside the module when needed.
-5. Add a runnable example under `examples/<domain>/<module-name>/` when it helps demonstrate usage.
-6. Add the module to the [module catalog](modules/README.md).
+1. 选择功能领域，并使用小写字母和连字符命名模块，例如 `modules/networking/http-client/`。
+2. 将实现代码放入 `src/`，通过所用语言的常规入口公开受支持的接口。
+3. 参考[模块说明模板](docs/module-template.md)编写模块 README，并添加该语言所需的依赖清单。
+4. 按需将模块专用的测试和小型运行资源放在模块内部。
+5. 如需演示用法，在 `examples/<domain>/<module-name>/` 中添加可运行的示例。
+6. 将模块登记到[模块目录](modules/README.md)。
 
-Each module owns its dependencies and tool configuration. Commands run from the relevant module or example directory unless its README says otherwise.
+每个模块自行管理依赖和工具配置。除模块说明另有约定外，命令均在对应的模块或示例目录中执行。
 
-## Everyday Git workflow
+## 日常 Git 操作
 
 ```bash
 git status
@@ -33,8 +35,8 @@ git commit -m "Add module description"
 git push origin main
 ```
 
-Store credentials in the environment or a local secret store. Commit sample configuration with placeholder values when configuration is needed.
+将 `<specific-paths>` 替换为本次需要提交的具体路径。凭证存放在环境变量或本地凭证存储中；需要配置示例时，提交使用占位值的示例文件。
 
-## Availability
+## 访问与使用权限
 
-This is a private repository. Reuse and redistribution rights require an explicit license or permission from the owner.
+本仓库为私有仓库。复用与再分发需要明确的许可证或仓库所有者的许可。
