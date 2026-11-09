@@ -2,6 +2,14 @@
 
 Store reusable code at `<domain>/<module-name>/`. Each module owns its source, public entry point, dependency manifest, and README.
 
+## Domains
+
+| Domain | Contents |
+| --- | --- |
+| [Microcontrollers](microcontrollers/README.md) | Reusable microcontroller firmware modules |
+
+## Modules
+
 No code modules are registered yet. Add a row when introducing a module:
 
 | Module | Language | Responsibility | Public entry point |

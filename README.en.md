@@ -9,6 +9,9 @@ A personal collection of reusable code modules, runnable examples, and supportin
 | Location | Contents |
 | --- | --- |
 | [modules/](modules/README.md) | Reusable modules, grouped by functional domain |
+| [Microcontroller modules](modules/microcontrollers/README.md) | Reusable firmware modules, drivers, and protocols |
+| [tools/](tools/README.md) | Development tools, grouped by functional domain |
+| [Microcontroller tools](tools/microcontrollers/README.md) | Host-side tools for microcontroller development |
 | [examples/](examples/README.md) | Small programs that demonstrate module usage |
 | [docs/architecture.md](docs/architecture.md) | File placement, boundaries, and dependency rules |
 | [docs/module-template.md](docs/module-template.md) | Starting point for a module README |

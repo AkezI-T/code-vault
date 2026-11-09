@@ -22,6 +22,9 @@ code-vault/
   docs/
     architecture.md
     module-template.md
+  tools/
+    microcontrollers/
+      README.md
   scripts/
   README.md
   .gitignore
@@ -40,12 +43,13 @@ The domain and module directories above describe the layout for added code. The 
 | Small runtime resources | The owning module's `assets/` |
 | Runnable integration or usage example | `examples/<domain>/<module-name>/` |
 | Guidance covering multiple modules | `docs/` |
+| Development tools | `tools/<domain>/<tool-name>/` |
 | Repository maintenance command | `scripts/` |
 | Module-specific helper script | The owning module's `scripts/` |
 | Generated output, caches, credentials | Local storage excluded by Git |
 | Large datasets, installers, release binaries | External storage or release assets with a documented retrieval location |
 
-Use descriptive kebab-case directory names. Example domain names include `networking`, `data`, and `embedded`. Create a domain when adding its first module.
+Use English kebab-case directory names. Microcontroller firmware modules live in `modules/microcontrollers/`; host-side microcontroller development tools live in `tools/microcontrollers/`. Create additional domains as needed.
 
 ## Module boundaries
 
