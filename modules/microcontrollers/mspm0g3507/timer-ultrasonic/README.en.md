@@ -2,13 +2,13 @@
 
 [简体中文](README.md) | English
 
-One-shot ultrasonic distance conversion from caller-supplied real timer pulse-width capture events. Accepts pulse_ticks, explicit tick_hz, event sequence and capture timestamp. Does not read a fixed CC snapshot, generate TRIG/PWM or own SysTick/ISR. Configurable sound speed and range, millimetre output, at most one success/failure result per arm. Origin, revision and absent permission grant are recorded in [SOURCE.md](SOURCE.md); no license grant accompanies this module.
+One-shot ultrasonic distance conversion from caller-supplied real timer pulse-width capture events. Accepts pulse_ticks, explicit tick_hz, event sequence and capture timestamp. Does not read a fixed CC snapshot, generate TRIG/PWM or own SysTick/ISR. Configurable sound speed and range, millimetre output, at most one success/failure result per arm.
 
 ## Environment and hardware responsibilities
 
 The C99 core only needs stdbool.h/stdint.h/stddef.h. It is placed under MSPM0G3507; application glue uses MSPM0 SDK 2.09.00.01 DriverLib/CMSIS and TI Arm Clang 4.0.4.LTS. Compile the [source](src/timer_ultrasonic.c) and add the directory containing the [header](include/timer_ultrasonic.h). The core needs no SDK. The glue example also requires SDK source, source/third_party/CMSIS/Core/Include and __MSPM0G3507__. C++ applications include the core header within extern "C" and compile the implementation as C.
 
-Application SysConfig selects the actual TimerG, CC channel, ECHO CCP pin and dividers. Use pulse-width capture up counting configured to produce actual width ticks. tick_hz is the counter's real rate, not CPU Hz; copying a prescaler number is insufficient. ECHO must respect MCU input limits; level-shift if needed and share ground. The application independently generates TRIG via GPIO/PWM, matching the sensor's approximately 10 µs high pulse and low/retrigger intervals. The upstream example's 50% duty PWM is not promised suitable for a particular sensor.
+Application SysConfig selects the actual TimerG, CC channel, ECHO CCP pin and dividers. Use pulse-width capture up counting configured to produce actual width ticks. tick_hz is the counter's real rate, not CPU Hz; copying a prescaler number is insufficient. ECHO must respect MCU input limits; level-shift if needed and share ground. The application independently generates TRIG via GPIO/PWM, matching the sensor's approximately 10 µs high pulse and low/retrigger intervals. Trigger pulse duty cycle and period must match the sensor specification.
 
 Confirm that the selected mode's CC value is this pulse's high width. If hardware supplies free-running edge timestamps, the application must subtract after checking counter width/direction/overflow, then feed the width. max_ticks must fit actual timer width/LOAD period; never treat a truncated count as a full pulse width. The application owns ISR, NVIC, event reading/acknowledgement, capture-cycle reset and overflow/overcapture detection. Follow the silicon's TI timer-capture errata, including TIMER_ERR_01 reload requirements where applicable. A valid numeric input alone cannot reveal hardware overflow or missed edges.
 
@@ -159,6 +159,6 @@ All core functions return immediately with no hardware access, waiting or heap a
 
 Configuration is copied and input config may expire after init. Keep instance address/storage valid while in use. Results are copied; feed retains no caller buffer pointer. Unconsumed results are never overwritten. There is no cancellation, destruction, trigger or hardware-stop API. To stop, application code stops PWM/capture IRQs and clears mailboxes/hardware references; allow core pending work to finish via step/feed and take before reuse. Numeric input cannot identify acoustic crosstalk, wrong sound speed, invalid electrical levels, timer inaccuracy, ISR delay or unreported overflow. The application owns physical confirmation and silicon-errata handling.
 
-## Build and permissions
+## Build
 
-Compile the core as C and MSPM0 glue with SDK include/device settings, linking DriverLib. No hardware validation is claimed. Origin and absent permission grant are recorded in [SOURCE.md](SOURCE.md).
+Compile the core as C and MSPM0 glue with SDK include/device settings, linking DriverLib. No hardware validation is claimed.

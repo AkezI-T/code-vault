@@ -150,4 +150,4 @@ assert tracker.predicted_x(40) is None
 
 无需构建步骤。在本模块目录运行 `python -B -c "import sys; sys.path.insert(0, 'src'); from alpha_beta_tracker import AlphaBetaTracker1D; print(AlphaBetaTracker1D(0, 639).update(100, 0))"` 可完成主机导入与单次调用。
 
-采用 [MIT 许可](LICENSE)，保留原版权声明。
+采用 [MIT 许可](LICENSE)。

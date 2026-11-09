@@ -150,4 +150,4 @@ This is a constant-velocity model without acceleration/confidence estimation or 
 
 There is no build step. From this module directory, run `python -B -c "import sys; sys.path.insert(0, 'src'); from alpha_beta_tracker import AlphaBetaTracker1D; print(AlphaBetaTracker1D(0, 639).update(100, 0))"` for a host import and one call.
 
-Distributed under the [MIT license](LICENSE), retaining the original copyright notice.
+Distributed under the [MIT license](LICENSE).

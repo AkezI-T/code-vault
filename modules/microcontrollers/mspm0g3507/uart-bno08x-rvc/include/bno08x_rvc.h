@@ -1,4 +1,3 @@
-/* Source provenance and license status: see ../SOURCE.md. */
 #ifndef BNO08X_RVC_H
 #define BNO08X_RVC_H
 

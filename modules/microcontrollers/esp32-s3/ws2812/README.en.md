@@ -136,4 +136,4 @@ The component builds with the application; artifacts go to the application's `bu
 
 ## License
 
-[MIT License](LICENSE), retaining `Copyright (c) 2026 GearRackMechanism Contributors`.
+[MIT License](LICENSE).

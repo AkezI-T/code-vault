@@ -25,7 +25,7 @@ typedef int (*ssd1306_write_fn)(void *context, bool is_data,
 
 | 总线 | 调用方实际封装 |
 | --- | --- |
-| I2C | 接 SDA/SCL 和共地，按板级电压配置上拉。使用面板 7 位地址（常见 0x3C/0x3D，源配置 0x3C）；每次命令事务先发控制字节 0x00，数据事务先发 0x40，再连续发 bytes。控制字节不属于传给回调的 bytes。0x78 是 0x3C 的写地址字节，不是传给 7 位地址 API 的地址。 |
+| I2C | 接 SDA/SCL 和共地，按板级电压配置上拉。使用面板 7 位地址（常见 0x3C/0x3D）；每次命令事务先发控制字节 0x00，数据事务先发 0x40，再连续发 bytes。控制字节不属于传给回调的 bytes。0x78 是 0x3C 的写地址字节，不是传给 7 位地址 API 的地址。 |
 | 四线 SPI | 接 SCLK、MOSI、DC、CS、RES 和共地。SSD1306 四线接口按 8 bit、MSB first、常见 mode 0 配置并遵守面板频率限制；DC 为命令拉低、数据拉高，CS 拉低覆盖传输，等最后一位完成再释放 CS 或切换 DC。不发送 I2C 控制字节。 |
 
 MSPM0 DriverLib I2C 适配通过 `DL_I2C_fillControllerTXFIFO` 补充 TX FIFO、`DL_I2C_startControllerTransfer` 发起控制字节加数据的传输，并处理 NACK、错误及有限超时；128 字节页加控制字节超过 FIFO 容量时必须持续补充，不能只填一次 FIFO。若自行拆成多次 I2C 事务，每次都需重复正确控制字节并保留所有字节顺序。
@@ -173,10 +173,8 @@ int ssd1306_draw_bitmap(ssd1306_t *display, uint8_t column, uint8_t page,
 
 同步逐页定位并覆盖完整字节，无透明合成或读改写，成功后位置为最后绘制页、column=column+width。参数全部预检后才发送；失败可能只更新部分行页，错误按统一契约。示例：`ssd1306_draw_bitmap(&display, 0, 0, 8, 1, tile, sizeof(tile))`。
 
-## 字体、范围与来源
+## 字体与范围
 
-文字由应用将有权使用的字形转换为同样的页格式位图后调用 draw_bitmap。6×8 字符用 width=6/page_count=1，8×16 字符用 width=8/page_count=2，16×16 字符用 width=16/page_count=2。字符串编码、字形查找、间距、数字格式化与换行由应用处理；模块不读取上游字体数组。非 8 像素整数高度的字形应由应用补齐整页，补齐位也会覆盖屏幕。
+文字由应用将字形转换为同样的页格式位图后调用 draw_bitmap。6×8 字符用 width=6/page_count=1，8×16 字符用 width=8/page_count=2，16×16 字符用 width=16/page_count=2。字符串编码、字形查找、间距、数字格式化与换行由应用处理；字形数据由调用方提供。非 8 像素整数高度的字形应由应用补齐整页，补齐位也会覆盖屏幕。
 
 不支持任意 y 位移绘图、像素级图形引擎、透明混合、SH1106 列偏移或控制器读回。面板显示映射仍取决于实际接线；回调负责电气协议和超时，核心不能确认屏幕实际响应或视觉结果。
-
-来源、提交、源文件清单与许可状态见 [SOURCE.md](SOURCE.md)。上游相关文件没有许可授权，本模块不添加 MIT 或其他授权；字体使用权须由调用方自行确认。

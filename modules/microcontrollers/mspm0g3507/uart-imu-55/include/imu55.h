@@ -1,4 +1,3 @@
-/* Source provenance and license status: see ../SOURCE.md. */
 #ifndef IMU55_H
 #define IMU55_H
 

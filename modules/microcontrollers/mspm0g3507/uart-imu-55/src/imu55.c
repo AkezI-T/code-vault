@@ -1,4 +1,3 @@
-/* Source provenance and license status: see ../SOURCE.md. */
 #include "imu55.h"
 #include <float.h>
 #include <stddef.h>

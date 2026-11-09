@@ -136,4 +136,4 @@ idf.py build
 
 ## 许可
 
-采用 [MIT License](LICENSE)，保留 `Copyright (c) 2026 GearRackMechanism Contributors`。
+采用 [MIT License](LICENSE)。

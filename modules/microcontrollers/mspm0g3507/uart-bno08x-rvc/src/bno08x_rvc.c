@@ -1,4 +1,3 @@
-/* Source provenance and license status: see ../SOURCE.md. */
 #include "bno08x_rvc.h"
 #include <stddef.h>
 #include <string.h>

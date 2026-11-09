@@ -1,4 +1,3 @@
-/* Source provenance and licensing status: ../SOURCE.md. */
 #include "ssd1306.h"
 
 static int send_bytes(ssd1306_t *display, bool is_data,

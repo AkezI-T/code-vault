@@ -2,7 +2,7 @@
 
 [简体中文](README.md) | English
 
-Configurable GPIO ultrasonic ranging: start emits a 10 µs TRIG pulse, step samples ECHO rise/fall, an exclusively owned TimerG counts the observed high interval, and take consumes one result. Independent instances use millimetres with explicit sound speed and timer Hz. Origin and permission status are in [SOURCE.md](SOURCE.md); no license grant accompanies this module.
+Configurable GPIO ultrasonic ranging: start emits a 10 µs TRIG pulse, step samples ECHO rise/fall, an exclusively owned TimerG counts the observed high interval, and take consumes one result. Independent instances use millimetres with explicit sound speed and timer Hz.
 
 ## Environment, hardware and integration
 
@@ -130,6 +130,6 @@ All module logic outside callbacks is bounded. Only start blocks in the delay ca
 
 Serialize all APIs in one main loop/task; callbacks run in that same context. Concurrent tasks or ISR/main access are unsupported. The module does not mask interrupts or own any ISR. Each instance needs separate TRIG/ECHO and measurement timer; the now_us clock can be shared. Configuration is copied, so input config may expire after init, but callback context and hardware must remain valid. There are no borrowed asynchronous data buffers. Results are copied and never overwritten before take. If step stops, an active timer continues until its one-shot period completes. No cancel/destroy API exists. After completion and take, timer is stopped and TRIG low; stop calls and release storage. Do not reinitialize active work.
 
-## Build and permissions
+## Build
 
-Compile implementation and example in an existing G3507 SysConfig project using SDK DriverLib. The application owns hardware, sampling accuracy, sound speed, maximum range and device intervals. Hardware operation is unvalidated. Origin, upstream revision and absent permission grant are recorded in [SOURCE.md](SOURCE.md).
+Compile implementation and example in an existing G3507 SysConfig project using SDK DriverLib. The application owns hardware, sampling accuracy, sound speed, maximum range and device intervals. Hardware operation is unvalidated.

@@ -2,7 +2,7 @@
 
 简体中文 | [English](README.en.md)
 
-配置化 GPIO 超声波测距：start 发出 10 µs TRIG 脉冲，step 采样 ECHO 上升和下降，独占的 TimerG 统计采样到的高电平时长，take 消费一次结果。实例互相独立，距离单位为毫米，声速和 timer Hz 显式配置。来源与使用权限见 [SOURCE.md](SOURCE.md)；此模块没有附带许可授权。
+配置化 GPIO 超声波测距：start 发出 10 µs TRIG 脉冲，step 采样 ECHO 上升和下降，独占的 TimerG 统计采样到的高电平时长，take 消费一次结果。实例互相独立，距离单位为毫米，声速和 timer Hz 显式配置。
 
 ## 环境、硬件与接入
 
@@ -130,6 +130,6 @@ int main(void)
 
 单个主循环/任务串行调用所有 API；回调也在该上下文中执行。不支持多任务、ISR 与主循环并发访问同一实例。模块不关中断、不拥有任何 ISR。每个实例需独立 TRIG/ECHO 和测量 timer；now_us 时基可以共享。配置按值复制，输入配置可在 init 后失效，回调 context 和硬件必须持续有效。实例无借用异步数据缓冲区，结果复制到调用方；未 take 前不覆盖。停止 step 会使活动 timer 继续运行至单次周期结束；模块无取消/销毁 API，完成并 take 后 timer 已停、TRIG 低，可停止调用并释放实例。不要在活动测量时重新 init。
 
-## 构建与权限
+## 构建
 
-在现有 G3507 SysConfig 工程中编译实现与示例，DriverLib 接口来自 SDK。硬件、采样精度、声速、最大量程和设备间隔由应用负责。未提供硬件验证。来源、上游修订和缺失的许可授权见 [SOURCE.md](SOURCE.md)。
+在现有 G3507 SysConfig 工程中编译实现与示例，DriverLib 接口来自 SDK。硬件、采样精度、声速、最大量程和设备间隔由应用负责。未提供硬件验证。

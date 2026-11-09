@@ -2,13 +2,13 @@
 
 简体中文 | [English](README.en.md)
 
-对调用方提供的真实定时器脉宽捕获事件进行一次性超声波距离换算。模块只接收 pulse_ticks、显式 tick_hz、新事件序号与捕获时间，不读取固定 CC 快照、不产生 TRIG/PWM、不接管 SysTick 或 ISR。配置量程和声速，距离单位为毫米；每次 arm 最多交付一个成功或错误结果。来源、上游修订与缺失的许可授权见 [SOURCE.md](SOURCE.md)；此模块没有附带许可授权。
+对调用方提供的真实定时器脉宽捕获事件进行一次性超声波距离换算。模块只接收 pulse_ticks、显式 tick_hz、新事件序号与捕获时间，不读取固定 CC 快照、不产生 TRIG/PWM、不接管 SysTick 或 ISR。配置量程和声速，距离单位为毫米；每次 arm 最多交付一个成功或错误结果。
 
 ## 环境与硬件责任
 
 核心为 C99，仅依赖 stdbool.h/stdint.h/stddef.h；归类于 MSPM0G3507 平台，应用 glue 使用 MSPM0 SDK 2.09.00.01 DriverLib/CMSIS 和 TI Arm Clang 4.0.4.LTS。编译 [源文件](src/timer_ultrasonic.c)，添加 [头文件](include/timer_ultrasonic.h) 所在 include 目录。核心不依赖 SDK；下方 glue 示例还需 SDK source、source/third_party/CMSIS/Core/Include 与 __MSPM0G3507__。C++ 应用在 extern "C" 中包含核心头文件并按 C 编译实现。
 
-应用通过 SysConfig 选择实际 TimerG、CC 通道、ECHO CCP 引脚和分频，使用与输出原始脉宽 tick 相符的 pulse-width capture up-counting 配置。tick_hz 是 counter 的实际 Hz，不是 CPU Hz；不能只复制 prescaler 数字。ECHO 电平必须在 MCU 容限内，必要时转换电平并共地。TRIG 由应用独立 GPIO 或 PWM 产生，符合传感器要求的约 10 µs 高脉冲及低电平/重触发间隔。模块不承诺上游示例中 50% 占空比 PWM 对特定传感器适用。
+应用通过 SysConfig 选择实际 TimerG、CC 通道、ECHO CCP 引脚和分频，使用与输出原始脉宽 tick 相符的 pulse-width capture up-counting 配置。tick_hz 是 counter 的实际 Hz，不是 CPU Hz；不能只复制 prescaler 数字。ECHO 电平必须在 MCU 容限内，必要时转换电平并共地。TRIG 由应用独立 GPIO 或 PWM 产生，符合传感器要求的约 10 µs 高脉冲及低电平/重触发间隔。触发脉冲的占空比与周期须符合传感器规格。
 
 应用确认所选模式的 CC 值为本次高电平脉宽；若硬件给出自由运行边沿时间戳，应由应用先做对应位宽/方向/溢出检查并相减，再 feed 宽度。max_ticks 必须处于所选 timer 的真实位宽/LOAD 周期内，不能把截断后的 counter 值当成完整脉宽。应用拥有 ISR、NVIC、事件读取/清除、捕获周期间复位和溢出/overcapture 检测；按实际硅版本遵循 TI timer 捕获勘误（例如 TIMER_ERR_01 的 reload 要求）。模块无法从一个合法数值判断是否存在硬件溢出或丢边沿。
 
@@ -159,6 +159,6 @@ bool app_range_service(AppRange *app, const AppCaptureEvent *event, uint32_t now
 
 配置按值复制，可在 init 后释放输入配置。实例在使用期间地址固定、有效，输出结果按值复制；feed 不保存任何调用方缓冲指针。无自动覆盖未消费结果，无取消、销毁、触发或硬件停止 API。停止时应用负责停止 PWM/捕获 IRQ、清理邮箱和硬件引用；核心等待态需等 step/feed 完成并 take 后再重用。连续声学串扰、错误声速、线缆电平、timer 精度、延迟 ISR 与未报告的溢出无法由纯数值接口判断。应用负责物理确认与硅勘误处理。
 
-## 构建与权限
+## 构建
 
-将核心编译为 C，MSPM0 glue 按 SDK include/设备定义编译并链接 DriverLib。无硬件验证声明。来源与缺失的许可授权见 [SOURCE.md](SOURCE.md)。
+将核心编译为 C，MSPM0 glue 按 SDK include/设备定义编译并链接 DriverLib。无硬件验证声明。

@@ -173,10 +173,8 @@ int ssd1306_draw_bitmap(ssd1306_t *display, uint8_t column, uint8_t page,
 
 Synchronously positions/writes each page, replacing whole bytes without transparency or read/modify/write. Success leaves the logical position at the last drawn page, column=column+width. All arguments are validated before sending. Failure may update only part of the rectangle; errors follow the shared contract. Example: `ssd1306_draw_bitmap(&display, 0, 0, 8, 1, tile, sizeof(tile))`.
 
-## Fonts, scope and provenance
+## Fonts and scope
 
-Applications convert glyphs they have permission to use into the same page-formatted bitmaps and call draw_bitmap. Use width=6/page_count=1 for 6×8 characters, width=8/page_count=2 for 8×16 characters and width=16/page_count=2 for 16×16 characters. String encoding, glyph lookup, spacing, number formatting and line wrapping belong to the application; the core does not read upstream font arrays. Pad glyph heights to whole 8-pixel pages; the padding bits also replace screen contents.
+Applications convert glyphs into the same page-formatted bitmaps and call draw_bitmap. Use width=6/page_count=1 for 6×8 characters, width=8/page_count=2 for 8×16 characters and width=16/page_count=2 for 16×16 characters. String encoding, glyph lookup, spacing, number formatting and line wrapping belong to the application; the caller supplies glyph data. Pad glyph heights to whole 8-pixel pages; the padding bits also replace screen contents.
 
 No arbitrary pixel-y drawing, pixel graphics engine, transparent blending, SH1106 column offset or controller readback is supported. Display mapping still depends on physical wiring. Callbacks implement electrical protocol and timeouts; the core cannot confirm physical display response or visual appearance.
-
-Origin, commit, source-file list and licensing status are recorded in [SOURCE.md](SOURCE.md). The relevant upstream files contain no license grant; this module assigns no MIT or other permission grant. The caller must establish font usage rights separately.

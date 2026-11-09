@@ -157,4 +157,4 @@ The module provides a byte stream without an event queue, overflow notification,
 
 ## License
 
-[MIT License](LICENSE), retaining `Copyright (c) 2026 GearRackMechanism Contributors`.
+[MIT License](LICENSE).

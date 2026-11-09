@@ -13,7 +13,6 @@ code-vault/
           README.md
           README.en.md
           LICENSE      (when a license is supplied)
-          SOURCE.md    (upstream origin and authorization status)
           include/     (public C headers, when needed)
           src/
           <language-specific build or dependency files>
@@ -79,7 +78,7 @@ Examples depend on modules. Modules remain usable without examples, repository m
 
 Pass application-specific addresses, paths, and options into the public API. Keep real tokens, passwords, private keys, and device-specific credentials outside version control. An example configuration contains placeholders only.
 
-Keep source assets needed for normal operation beside the owning module. Document the origin and usage rights of third-party resources. Download large optional resources into an ignored local directory and document retrieval in the owning README.
+Keep source assets needed for normal operation beside the owning module. Download large optional resources into an ignored local directory and document retrieval in the owning README.
 
 ## Dependencies and versions
 

@@ -128,4 +128,4 @@ Checksum coverage includes all three reserved bytes. This additive checksum is n
 
 All state is caller-owned. The fixed buffer is19 bytes; use `sizeof` for actual structure size. No allocation, blocking, callbacks or peripheral resources, and no deinit. Instances are independent. Serialize init/feed on each instance; calls are not reentrant for a shared instance. Choose a receive context appropriate for the application; float decoding, structure copies and buffer movement add ISR work. Synchronize shared parser/sample access between interrupts and tasks.
 
-Supports UART-RVC only, not SHTP, configuration commands or other message formats. No calibration, physical range checks, timeout or sample cache. See [SOURCE.md](SOURCE.md) for origin and missing license grant; this directory grants no permission to use or redistribute upstream code or its derivatives.
+Supports UART-RVC only, not SHTP, configuration commands or other message formats. No calibration, physical range checks, timeout or sample cache.
