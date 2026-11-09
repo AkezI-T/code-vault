@@ -7,13 +7,20 @@ This repository uses one Git history for independently understandable modules. F
 ```text
 code-vault/
   modules/
-    <domain>/
+    microcontrollers/
+      <chip>/
+        <module-name>/
+          README.md
+          README.en.md
+          LICENSE
+          include/     (public C headers, when needed)
+          src/
+          <language-specific build or dependency files>
+    <other-domain>/
       <module-name>/
         README.md
-        <language-specific dependency manifest>
+        README.en.md
         src/
-        tests/       (when needed)
-        assets/      (small runtime resources, when needed)
   examples/
     <domain>/
       <module-name>/
@@ -49,7 +56,7 @@ The domain and module directories above describe the layout for added code. The 
 | Generated output, caches, credentials | Local storage excluded by Git |
 | Large datasets, installers, release binaries | External storage or release assets with a documented retrieval location |
 
-Use English kebab-case directory names. Microcontroller firmware modules live in `modules/microcontrollers/`; host-side microcontroller development tools live in `tools/microcontrollers/`. Create additional domains as needed.
+Use English kebab-case directory names. Microcontroller firmware modules live in `modules/microcontrollers/<chip>/<module-name>/`, grouped under `esp32-s3`, `mspm0g3507`, or `k230`. Host-side microcontroller development tools live in `tools/microcontrollers/`. Create additional domains as needed.
 
 ## README languages
 
