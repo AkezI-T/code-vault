@@ -1,0 +1,32 @@
+# Local credentials and environment configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local dependencies and virtual environments
+node_modules/
+.venv/
+venv/
+
+# Generated outputs and caches
+build/
+dist/
+out/
+coverage/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pnpm-store/
+.cache/
+
+# Local scratch files
+.tmp/
+*.log
