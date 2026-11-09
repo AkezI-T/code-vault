@@ -21,7 +21,7 @@ A personal collection of reusable code modules, runnable examples, and supportin
 
 1. Choose a domain and a descriptive kebab-case name, such as `modules/networking/http-client/`.
 2. Put implementation files in `src/` and expose the supported API through the language's normal entry point.
-3. Add a module README using the [template](docs/module-template.md), along with the dependency manifest required by that language.
+3. Create a Simplified Chinese `README.md` in every `<module-name>/` root using the [template](docs/module-template.md), documenting integration, public APIs, and a complete usage example; add the dependency manifest required by that language.
 4. Keep module-specific tests and small runtime assets inside the module when needed.
 5. Add a runnable example under `examples/<domain>/<module-name>/` when it helps demonstrate usage.
 6. Add the module to the [module catalog](modules/README.md).

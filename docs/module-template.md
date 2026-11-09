@@ -1,44 +1,79 @@
-# Module README template
+# 模块使用说明模板
 
-Copy the following sections into a new module's README and replace the placeholders. Include optional sections only when relevant.
+每个 `<module-name>/` 根目录必须包含名为 `README.md` 的简体中文使用说明。复制以下结构并替换占位内容；API 名称、签名和代码示例必须与实现一致。适用的约束必须写清，不适用的项目可注明或省略。
+
+模块及文件目录使用英文命名，模块名不带品牌名。需要区分通信接口时，将实际支持的通信方式写入名称，例如 `i2c-line-sensor`。
 
 ---
 
-# <Module name>
+# <module-name>
 
-<One sentence describing the capability and intended callers.>
+<说明模块用途、适用场景和能力范围。>
 
-## Requirements
+## 环境要求
 
-- Runtime or toolchain: <name and supported version>
-- Platforms: <supported operating systems or hardware>
+- 芯片：<芯片型号及支持范围>
+- 框架与工具链：<名称和版本要求>
+- 依赖：<同仓库模块、外部库和所需外设资源>
 
-## Installation
+## 接线与配置
 
-<Commands to install dependencies or consume the module. State the working directory for commands.>
+<涉及硬件时说明供电、电平、引脚、通信方式及地址或波特率等必要信息。>
 
-## Usage
+| 配置项 | 类型 | 单位与有效范围 | 默认值 | 是否必需 | 说明 |
+| --- | --- | --- | --- | --- | --- |
+| <配置名> | <类型> | <单位、范围或枚举> | <默认值或无> | <是或否> | <用途> |
 
-<A minimal working example using the public entry point.>
+## 接入步骤
 
-## Public API
+1. <说明源码、头文件或包如何加入工程。>
+2. <说明依赖声明、编译配置及需要注册的中断或周期调用。>
+3. <说明初始化、运行和停止或释放的调用顺序。>
 
-| Export | Inputs | Result |
-| --- | --- | --- |
-| <name> | <parameters> | <return value and error behavior> |
+命令注明执行目录，配置示例使用占位值。
 
-## Configuration
+## 最小使用示例
 
-<Required and optional settings, their defaults, and a sample with placeholder values.>
+<提供与实际 API 一致、可按上述步骤集成的完整最小示例，包含头文件或导入、配置、初始化、一次典型操作及返回值处理。存在资源释放接口时包含清理代码。标明需要按硬件修改的参数。>
 
-## Development
+## API 使用说明
 
-<Applicable build and check commands, and where generated output goes.>
+列出全部公开函数、类型及调用所需的常量。每个公开 API 按以下结构说明，公开类型逐字段解释。
 
-## Dependencies
+### <API 名称>
 
-<Direct dependencies on sibling modules, external packages, or external services.>
+**签名或导入方式**
 
-## Resources
+<填写准确的函数签名、方法签名或导入语句，并使用对应语言的代码块。>
 
-<Required assets, retrieval steps for large resources, and third-party usage rights.>
+**用途与调用前提**
+
+<说明行为、初始化要求、前置调用和允许调用的状态。>
+
+**参数**
+
+| 参数 | 类型与方向 | 单位、范围与默认值 | 说明 |
+| --- | --- | --- | --- |
+| <参数名> | <类型；输入或输出> | <实际约束> | <含义、是否允许为空、缓冲区大小及生命周期等> |
+
+无参数时明确写“无参数”。
+
+**返回值与错误处理**
+
+<说明成功和失败的返回值、错误码或异常含义，以及调用方需要采取的处理。无返回值时明确说明。>
+
+**调用约束**
+
+<按实际实现说明阻塞行为与超时单位、线程安全、任务或中断调用限制、异步完成方式、资源所有权及释放要求。>
+
+**调用示例**
+
+<给出该 API 的典型调用及结果处理，必要时说明正常或错误结果。>
+
+## 构建与检查
+
+<列出适用的构建和检查命令、执行目录及生成文件的位置。>
+
+## 限制与资源
+
+<说明支持边界、必要的标定或硬件适配、外部资源获取方式及第三方代码和资源的使用权限。>
