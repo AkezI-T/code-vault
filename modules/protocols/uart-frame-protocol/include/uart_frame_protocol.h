@@ -29,6 +29,7 @@
  *   G3  AA 01 06 05 00 00 00 00 00 00 8F   AIM_TARGET all zero,          SEQ=5
  *   G4  AA 00 01 2A 00 69                  ACK for SEQ=0x2A, status=OK
  *   G5  AA 03 03 10 01 19 00 43            CMD cmd=1 value=25,           SEQ=16
+ *   G6  AA 11 02 00 FD 00 4B               TEMP temp=253 (25.3 degC), SEQ=0
  *
  * C99, header-only, depends on <stdint.h> and <stddef.h> only.
  */
@@ -52,6 +53,7 @@
 #define UFP_TYPE_AIM_TARGET 0x01u
 #define UFP_TYPE_IMU_DATA 0x02u
 #define UFP_TYPE_CMD 0x03u
+#define UFP_TYPE_TEMP 0x11u
 
 /* Return codes. All public calls return UFP_OK (0) on success. */
 #define UFP_OK 0

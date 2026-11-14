@@ -32,6 +32,7 @@ __all__ = [
     "TYPE_AIM_TARGET",
     "TYPE_IMU_DATA",
     "TYPE_CMD",
+    "TYPE_TEMP",
     "MessageSpec",
     "MESSAGE_REGISTRY",
     "UartFrameProtocolError",
@@ -52,6 +53,7 @@ TYPE_ACK = 0x00
 TYPE_AIM_TARGET = 0x01
 TYPE_IMU_DATA = 0x02
 TYPE_CMD = 0x03
+TYPE_TEMP = 0x11
 
 
 @dataclass(frozen=True)
@@ -101,6 +103,13 @@ MESSAGE_REGISTRY: Dict[int, MessageSpec] = {
         needs_ack=True,
         payload_len=None,
         schema="reserved, undefined; example cmd(1B) + value(uint16 LE)",
+    ),
+    TYPE_TEMP: MessageSpec(
+        type_id=TYPE_TEMP,
+        name="TEMP",
+        needs_ack=False,
+        payload_len=2,
+        schema="temp(int16 LE), 0.1 degC per LSB (253 = 25.3 degC); example message",
     ),
 }
 

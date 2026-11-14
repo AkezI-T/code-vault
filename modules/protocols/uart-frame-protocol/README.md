@@ -121,6 +121,7 @@ AA 00 01 <被确认帧的 SEQ> <status> <CRC8>      LEN = 1，status 0x00 表示
 | `0x01` | AIM_TARGET | 否（流式） | 6 B | `dx(int16 LE), dy(int16 LE), area(uint16 LE)` | 示例消息（仅演示），`dx`/`dy` 为相对画面中心的偏移 |
 | `0x02` | IMU_DATA | 否（流式） | 预留 | 未定义 | 后续按实际传感器输出定义 |
 | `0x03` | CMD | 是（可靠） | 预留 | 未定义；示例 `cmd(1B) + value(uint16 LE)` | 需 ACK 确认 |
+| `0x11` | TEMP | 否（流式） | 2 B | `temp(int16 LE)`，0.1 °C/LSB（253 表示 25.3 °C） | 示例消息（仅演示） |
 
 **AIM_TARGET 只是示例消息，不代表实际使用。** 它的 6 字节布局（两个 int16 坐标 + 一个 uint16 面积/尺度，均小端）用来演示帧格式，`dx`/`dy` 按「相对画面中心的偏移」理解即可；实际要用什么消息，按上面「怎么新增一条消息」自己加。
 
@@ -695,7 +696,7 @@ decoder.reset()
 
 ## 构建与检查
 
-Python 单元测试（含 5 个黄金帧的 pack/unpack/CRC 逐字节断言）：
+Python 单元测试（含 6 个黄金帧的 pack/unpack/CRC 逐字节断言）：
 
 ```bash
 cd modules/protocols/uart-frame-protocol
@@ -718,6 +719,7 @@ gcc -std=c99 -Wall -Wextra -pedantic -Werror -I include -c your_file.c -o your_f
 | G3 | `AA 01 06 05 00 00 00 00 00 00 8F` | AIM_TARGET 全零, SEQ=5 |
 | G4 | `AA 00 01 2A 00 69` | ACK 确认 SEQ=0x2A, status=OK |
 | G5 | `AA 03 03 10 01 19 00 43` | CMD cmd=1 value=25, SEQ=16 |
+| G6 | `AA 11 02 00 FD 00 4B` | TEMP temp=25.3°C, SEQ=0 |
 
 ## 限制与资源
 

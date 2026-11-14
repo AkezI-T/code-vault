@@ -61,6 +61,13 @@ GOLDEN_FRAMES = (
         _hex("01 19 00"),
         "G5 CMD cmd=1 value=25",
     ),
+    (
+        "AA 11 02 00 FD 00 4B",
+        ufp.TYPE_TEMP,
+        0,
+        _hex("FD 00"),
+        "G6 TEMP temp=253 (25.3 degC)",
+    ),
 )
 
 
@@ -252,6 +259,25 @@ class RegistryTest(unittest.TestCase):
         self.assertEqual(ufp.HEADER_LEN, 4)
         self.assertEqual(ufp.MAX_PAYLOAD, 255)
         self.assertEqual(ufp.MAX_FRAME_LEN, 260)
+
+
+class TempExampleTest(unittest.TestCase):
+    def test_temp_is_two_byte_example_message(self):
+        wire = _hex("AA 11 02 00 FD 00 4B")
+        # The codec stays payload-agnostic; the registry schema defines temp.
+        self.assertEqual(ufp.pack(ufp.TYPE_TEMP, 0, struct.pack("<h", 253)), wire)
+
+        frame = ufp.unpack(wire)
+        self.assertEqual(frame.type, ufp.TYPE_TEMP)
+        self.assertEqual(frame.seq, 0)
+        (temp,) = struct.unpack("<h", frame.payload)
+        self.assertEqual(temp, 253)  # 253 * 0.1 = 25.3 degC
+
+        spec = ufp.MESSAGE_REGISTRY[ufp.TYPE_TEMP]
+        self.assertEqual(spec.name, "TEMP")
+        self.assertEqual(spec.payload_len, 2)
+        self.assertFalse(spec.needs_ack)
+        self.assertIn("example", spec.schema)
 
 
 if __name__ == "__main__":

@@ -121,6 +121,7 @@ The registry is data, not code branches. Adding a message type is one row; the t
 | `0x01` | AIM_TARGET | no (streaming) | 6 B | `dx(int16 LE), dy(int16 LE), area(uint16 LE)` | Example message (demonstration only); `dx`/`dy` are offsets from the image center |
 | `0x02` | IMU_DATA | no (streaming) | reserved | undefined | To be defined from the sensor output |
 | `0x03` | CMD | yes (reliable) | reserved | undefined; example `cmd(1B) + value(uint16 LE)` | Requires an ACK |
+| `0x11` | TEMP | no (streaming) | 2 B | `temp(int16 LE)`, 0.1 °C per LSB (253 = 25.3 °C) | Example message (demonstration only) |
 
 **AIM_TARGET is an example message, not a real type.** Its 6-byte layout (two int16 coordinates plus a uint16 area or scale, all little-endian) demonstrates the frame format; `dx`/`dy` are offsets from the image center. Add real message types per the "Adding a message" section.
 
@@ -695,7 +696,7 @@ decoder.reset()
 
 ## Build and checks
 
-Python unit tests, including byte-exact pack/unpack/CRC assertions for the five golden frames:
+Python unit tests, including byte-exact pack/unpack/CRC assertions for the six golden frames:
 
 ```bash
 cd modules/protocols/uart-frame-protocol
@@ -718,6 +719,7 @@ Golden frames shared by both implementations:
 | G3 | `AA 01 06 05 00 00 00 00 00 00 8F` | AIM_TARGET all zero, SEQ=5 |
 | G4 | `AA 00 01 2A 00 69` | ACK for SEQ=0x2A, status=OK |
 | G5 | `AA 03 03 10 01 19 00 43` | CMD cmd=1 value=25, SEQ=16 |
+| G6 | `AA 11 02 00 FD 00 4B` | TEMP temp=25.3°C, SEQ=0 |
 
 ## Limits and resources
 
