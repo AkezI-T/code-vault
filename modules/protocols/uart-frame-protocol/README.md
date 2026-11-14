@@ -2,7 +2,7 @@
 
 简体中文 | [English](README.en.md)
 
-通用 UART 帧传输协议：定长 4 字节头 + 变长载荷 + 1 字节 CRC8，长度定界、二进制安全，附带逐字节喂入的接收状态机。适用于 MCU 与主控之间传送小消息（目标坐标、IMU 数据、命令等），发送端和接收端不必用同一种语言，也不必是同一块芯片。
+通用 UART 帧传输协议：定长 4 字节头 + 变长载荷 + 1 字节 CRC8，长度定界、二进制安全，附带逐字节喂入的接收状态机。适用于 MCU 与主控之间传送小消息（目标坐标、IMU 数据、命令、温度等），发送端和接收端不必用同一种语言，也不必是同一块芯片。
 
 传输层只负责「把 TYPE/LEN/SEQ/PAYLOAD 装成帧、校验 CRC、拆回字段」，不解释载荷含义；载荷长什么样，由下面的消息注册表定义。新增一种消息只需在注册表加一行，传输层代码不动。
 
@@ -85,7 +85,7 @@ AA 00 01 <被确认帧的 SEQ> <status> <CRC8>      LEN = 1，status 0x00 表示
 
 哪些消息需要 ACK 由注册表逐类型标记，而不是由传输层硬编码：
 
-- 流式消息（坐标、IMU 数据这类）不需要 ACK，丢了就等下一帧，避免为每帧往返一次。
+- 流式消息（坐标、IMU、温度这类）不需要 ACK，丢了就等下一帧，避免为每帧往返一次。
 - 可靠消息（`CMD`）需要 ACK。
 - ACK 自身不需要再被确认。
 
@@ -113,33 +113,15 @@ AA 00 01 <被确认帧的 SEQ> <status> <CRC8>      LEN = 1，status 0x00 表示
 
 ## 消息注册表
 
-注册表是「数据」，不是代码分支。加一种消息 = 加一行注册表，传输层不动。
+注册表是数据：加一条消息 = 加一行，传输层不动、编解码器也不读这张表——`pack`/`unpack` 与 C 的 `ufp_pack`/`ufp_unpack` 对任何 TYPE 一视同仁，只做装箱与校验。
 
 | TYPE | 名称 | 需 ACK | 载荷长度 | 载荷 schema | 说明 |
 | --- | --- | --- | --- | --- | --- |
 | `0x00` | ACK | 否（自身不再确认） | 1 B | `status(1B)`，`0x00` = OK | SEQ 字段填被确认帧的 SEQ |
-| `0x01` | AIM_TARGET | 否（流式） | 6 B | `dx(int16 LE), dy(int16 LE), area(uint16 LE)` | 示例消息（仅演示），`dx`/`dy` 为相对画面中心的偏移 |
-| `0x02` | IMU_DATA | 否（流式） | 预留 | 未定义 | 后续按实际传感器输出定义 |
-| `0x03` | CMD | 是（可靠） | 预留 | 未定义；示例 `cmd(1B) + value(uint16 LE)` | 需 ACK 确认 |
-| `0x11` | TEMP | 否（流式） | 2 B | `temp(int16 LE)`，0.1 °C/LSB（253 表示 25.3 °C） | 示例消息（仅演示） |
-
-**AIM_TARGET 只是示例消息，不代表实际使用。** 它的 6 字节布局（两个 int16 坐标 + 一个 uint16 面积/尺度，均小端）用来演示帧格式，`dx`/`dy` 按「相对画面中心的偏移」理解即可；实际要用什么消息，按上面「怎么新增一条消息」自己加。
-
-同一张表在代码里的落点：
-
-- C：`include/uart_frame_protocol.h` 里的 `UFP_TYPE_*` 常量。
-- Python：`src/uart_frame_protocol.py` 里的 `TYPE_*` 常量与 `MESSAGE_REGISTRY`（含名称、是否需 ACK、固定载荷长度、schema 描述）。
-
-编解码器本身不读注册表：`pack`/`unpack` 与 C 的 `ufp_pack`/`ufp_unpack` 对任何 TYPE 一视同仁，只做装箱与校验。
-
-### 每一列是什么意思
-
-- **TYPE**：消息编号，0~255。`0x00` 固定留给 ACK，其余按需分配；线上只传这一个字节，不传名称。
-- **名称**：给人看的名字，只出现在文档和代码常量里。
-- **需 ACK**：这条消息丢了要不要重发。流式数据（坐标、IMU）填否——丢了等下一帧；指令类填是。
-- **载荷长度**：载荷的定长字节数；变长或还没定的写「预留」。
-- **载荷 schema**：载荷里每个字段的名字、类型、字节序。这一列才是真正定义「载荷长什么样」的地方。
-- **说明**：补充约定，比如 ACK 的 SEQ 填什么。
+| `0x01` | AIM_TARGET | 否（流式） | 6 B | `dx(int16 LE), dy(int16 LE), area(uint16 LE)` | 示例消息，`dx`/`dy` 为相对画面中心的偏移 |
+| `0x02` | IMU_DATA | 否（流式） | 6 B | `gx(int16 LE), gy(int16 LE), gz(int16 LE)`，0.01 °/s/LSB | 三轴角速度 |
+| `0x03` | CMD | 是（可靠） | 3 B | `cmd(1B) + value(uint16 LE)` | 需 ACK 确认 |
+| `0x11` | TEMP | 否（流式） | 2 B | `temp(int16 LE)`，0.1 °C/LSB（253 表示 25.3 °C） | 示例消息 |
 
 ### 怎么新增一条消息
 
@@ -150,6 +132,335 @@ AA 00 01 <被确认帧的 SEQ> <status> <CRC8>      LEN = 1，status 0x00 表示
 3. C 侧在 `uart_frame_protocol.h` 加 `#define UFP_TYPE_PING 0x10`。
 4. Python 侧在 `uart_frame_protocol.py` 加 `TYPE_PING = 0x10`，并在 `MESSAGE_REGISTRY` 里加一条 `MessageSpec(type_id=0x10, name="PING", needs_ack=False, payload_len=0, schema="无载荷")`。
 5. 收发两端各自按 schema 处理载荷即可，传输层和编解码器一行都不用动。
+
+## 示例帧的具体构成
+
+注册表里的五个类型各走一遍完整构造：值 → 定标成整数 → 小端字节 → 帧头 → CRC → 最终帧。`ACK` 是保留的确认帧，`IMU_DATA` 与 `CMD` 是定义好的消息，`AIM_TARGET` 和 `TEMP` 是示例消息。
+
+### ACK：确认帧
+
+载荷只有一个状态字节；被确认的帧序号放在 `SEQ` 字段里，所以 ACK 的 `SEQ` 不是它自己的发送序号。
+
+| 载荷字段 | 类型 | 字节序 | 载荷偏移 | 说明 |
+| --- | --- | --- | --- | --- |
+| `status` | `uint8` | 无（单字节） | 0 | `0x00` = OK；其他值表示失败原因，由上层约定 |
+
+以确认 `SEQ=0x2A`、status=`0x00` 为例：
+
+| 步骤 | 结果 |
+| --- | --- |
+| 值 | 被确认帧的 `SEQ=0x2A`，status=OK |
+| 定标 | 单字节状态，不做定标 |
+| 小端字节 | `00`（载荷 1 字节） |
+| 帧头 | SOF=`AA`，TYPE=`00`，LEN=`01`，SEQ=`2A` |
+| CRC8 | 对 `AA 00 01 2A 00` 计算 → `69` |
+| 最终帧 | `AA 00 01 2A 00 69` |
+
+三种状态取值：
+
+| 例子 | 被确认 SEQ | `status` | 载荷（hex） | 帧（hex） |
+| --- | --- | --- | --- | --- |
+| 成功 | `0x2A` | `0x00` | `00` | `AA 00 01 2A 00 69` |
+| 失败 | `0x07` | `0x01` | `01` | `AA 00 01 07 01 29` |
+| 其他原因 | `0x00` | `0x02` | `02` | `AA 00 01 00 02 4B` |
+
+Python：
+
+```python
+import uart_frame_protocol as ufp
+
+for acked_seq, status in ((0x2A, 0x00), (0x07, 0x01), (0x00, 0x02)):
+    frame = ufp.pack(ufp.TYPE_ACK, acked_seq, bytes((status,)))
+    print("seq=0x%02X status=0x%02X -> %s" % (acked_seq, status, frame.hex(" ").upper()))
+# seq=0x2A status=0x00 -> AA 00 01 2A 00 69
+# seq=0x07 status=0x01 -> AA 00 01 07 01 29
+# seq=0x00 status=0x02 -> AA 00 01 00 02 4B
+```
+
+C：
+
+```c
+void send_ack(uint8_t acked_seq, uint8_t status)
+{
+    uint8_t payload[1];
+    uint8_t frame[UFP_FRAME_MAX];
+    size_t frame_len = 0u;
+
+    payload[0] = status;
+    if (ufp_pack(UFP_TYPE_ACK, acked_seq, payload, sizeof(payload),
+                 frame, sizeof(frame), &frame_len) != UFP_OK) {
+        return;
+    }
+    /* acked_seq=0x2A、status=0x00 时 frame_len == 6，内容为 AA 00 01 2A 00 69 */
+}
+```
+
+### AIM_TARGET：相对偏移与面积
+
+坐标直接以整数像素表示，不做定标。
+
+| 载荷字段 | 类型 | 字节序 | 载荷偏移 | 说明 |
+| --- | --- | --- | --- | --- |
+| `dx` | `int16` | 小端 | 0 ~ 1 | 相对画面中心的水平偏移，向右为正 |
+| `dy` | `int16` | 小端 | 2 ~ 3 | 相对画面中心的垂直偏移，向下为正 |
+| `area` | `uint16` | 小端 | 4 ~ 5 | 目标面积或尺度，单位由上层约定 |
+
+以 G2 为例，`dx=+10`、`dy=-20`、`area=4500`、`SEQ=1`：
+
+| 步骤 | 结果 |
+| --- | --- |
+| 值 | `dx=+10`、`dy=-20`、`area=4500` |
+| 定标 | 坐标不做定标，直接取整数 |
+| 小端字节 | `10` → `0A 00`；`-20` → `EC FF`；`4500` → `94 11`；载荷 = `0A 00 EC FF 94 11`（6 字节） |
+| 帧头 | SOF=`AA`，TYPE=`01`，LEN=`06`，SEQ=`01` |
+| CRC8 | 对 `AA 01 06 01 0A 00 EC FF 94 11` 计算 → `82` |
+| 最终帧 | `AA 01 06 01 0A 00 EC FF 94 11 82` |
+
+正、负、零三个取值：
+
+| 例子 | `dx` | `dy` | `area` | 载荷（hex） | 帧（hex） |
+| --- | --- | --- | --- | --- | --- |
+| 零偏移，面积 3000 | 0 | 0 | 3000 | `00 00 00 00 B8 0B` | `AA 01 06 00 00 00 00 00 B8 0B F3` |
+| 正偏移 + 负偏移 | +10 | -20 | 4500 | `0A 00 EC FF 94 11` | `AA 01 06 01 0A 00 EC FF 94 11 82` |
+| 全零 | 0 | 0 | 0 | `00 00 00 00 00 00` | `AA 01 06 05 00 00 00 00 00 00 8F` |
+
+Python：
+
+```python
+import struct
+
+import uart_frame_protocol as ufp
+
+for dx, dy, area, seq in ((0, 0, 3000, 0), (10, -20, 4500, 1), (0, 0, 0, 5)):
+    payload = struct.pack("<hhH", dx, dy, area)  # int16、int16、uint16，均小端
+    print(ufp.pack(ufp.TYPE_AIM_TARGET, seq, payload).hex(" ").upper())
+# AA 01 06 00 00 00 00 00 B8 0B F3
+# AA 01 06 01 0A 00 EC FF 94 11 82
+# AA 01 06 05 00 00 00 00 00 00 8F
+```
+
+C：
+
+```c
+void send_aim_target(int16_t dx, int16_t dy, uint16_t area, uint8_t seq)
+{
+    uint8_t payload[6];
+    uint8_t frame[UFP_FRAME_MAX];
+    size_t frame_len = 0u;
+
+    payload[0] = (uint8_t)((uint16_t)dx & 0xFFu);   /* 有符号数按补码取低字节在前 */
+    payload[1] = (uint8_t)(((uint16_t)dx >> 8) & 0xFFu);
+    payload[2] = (uint8_t)((uint16_t)dy & 0xFFu);
+    payload[3] = (uint8_t)(((uint16_t)dy >> 8) & 0xFFu);
+    payload[4] = (uint8_t)(area & 0xFFu);
+    payload[5] = (uint8_t)((area >> 8) & 0xFFu);
+
+    if (ufp_pack(UFP_TYPE_AIM_TARGET, seq, payload, sizeof(payload),
+                 frame, sizeof(frame), &frame_len) != UFP_OK) {
+        return;
+    }
+    /* dx=10、dy=-20、area=4500、seq=1 时 frame_len == 11，内容为上表的 G2 */
+}
+```
+
+### IMU_DATA：三轴角速度
+
+三个轴各一个 `int16`，0.01 °/s/LSB：物理值乘以 100。
+
+| 载荷字段 | 类型 | 字节序 | 载荷偏移 | 说明 |
+| --- | --- | --- | --- | --- |
+| `gx` | `int16` | 小端 | 0 ~ 1 | 绕 X 轴角速度，0.01 °/s/LSB |
+| `gy` | `int16` | 小端 | 2 ~ 3 | 绕 Y 轴角速度，0.01 °/s/LSB |
+| `gz` | `int16` | 小端 | 4 ~ 5 | 绕 Z 轴角速度，0.01 °/s/LSB；`150` 表示 1.50 °/s |
+
+以 `gx=0`、`gy=0`、`gz=1.50 °/s`、`SEQ=0` 为例：
+
+| 步骤 | 结果 |
+| --- | --- |
+| 值 | `gx=0`、`gy=0`、`gz=1.50 °/s` |
+| 定标 | ×100：1.50 → `150` = `0x0096`；0 → `0x0000` |
+| 小端字节 | `96 00`；载荷 = `00 00 00 00 96 00`（6 字节） |
+| 帧头 | SOF=`AA`，TYPE=`02`，LEN=`06`，SEQ=`00` |
+| CRC8 | 对 `AA 02 06 00 00 00 00 00 96 00` 计算 → `31` |
+| 最终帧 | `AA 02 06 00 00 00 00 00 96 00 31` |
+
+正、负、零三种取值：
+
+| 例子 | 物理值（°/s） | 定标整数（gx, gy, gz） | 载荷（hex） | 帧（hex） |
+| --- | --- | --- | --- | --- |
+| 全零 | 0 / 0 / 0 | 0 / 0 / 0 | `00 00 00 00 00 00` | `AA 02 06 02 00 00 00 00 00 00 17` |
+| 仅 gz | 0 / 0 / 1.50 | 0 / 0 / 150 | `00 00 00 00 96 00` | `AA 02 06 00 00 00 00 00 96 00 31` |
+| 负 X、正 Y | -1.00 / 2.00 / 0 | -100 / 200 / 0 | `9C FF C8 00 00 00` | `AA 02 06 01 9C FF C8 00 00 00 CB` |
+
+Python：
+
+```python
+import struct
+
+import uart_frame_protocol as ufp
+
+for gx, gy, gz, seq in ((0, 0, 0, 2), (0, 0, 150, 0), (-100, 200, 0, 1)):
+    payload = struct.pack("<hhh", gx, gy, gz)  # 三轴均 int16 小端
+    print(ufp.pack(ufp.TYPE_IMU_DATA, seq, payload).hex(" ").upper())
+# AA 02 06 02 00 00 00 00 00 00 17
+# AA 02 06 00 00 00 00 00 96 00 31
+# AA 02 06 01 9C FF C8 00 00 00 CB
+```
+
+C：
+
+```c
+void send_imu(int16_t gx, int16_t gy, int16_t gz, uint8_t seq)
+{
+    uint8_t payload[6];
+    uint8_t frame[UFP_FRAME_MAX];
+    size_t frame_len = 0u;
+
+    payload[0] = (uint8_t)((uint16_t)gx & 0xFFu);
+    payload[1] = (uint8_t)(((uint16_t)gx >> 8) & 0xFFu);
+    payload[2] = (uint8_t)((uint16_t)gy & 0xFFu);
+    payload[3] = (uint8_t)(((uint16_t)gy >> 8) & 0xFFu);
+    payload[4] = (uint8_t)((uint16_t)gz & 0xFFu);
+    payload[5] = (uint8_t)(((uint16_t)gz >> 8) & 0xFFu);
+
+    if (ufp_pack(UFP_TYPE_IMU_DATA, seq, payload, sizeof(payload),
+                 frame, sizeof(frame), &frame_len) != UFP_OK) {
+        return;
+    }
+    /* gx=0、gy=0、gz=150、seq=0 时 frame_len == 11，内容为 AA 02 06 00 00 00 00 00 96 00 31 */
+}
+```
+
+### CMD：命令与参数
+
+命令号 1 字节，参数 2 字节小端。注册表里标了需要 ACK，接收方处理完回一帧 ACK（形如 `AA 00 01 <帧 SEQ> 00 <CRC>`）。
+
+| 载荷字段 | 类型 | 字节序 | 载荷偏移 | 说明 |
+| --- | --- | --- | --- | --- |
+| `cmd` | `uint8` | 无（单字节） | 0 | 命令号 |
+| `value` | `uint16` | 小端 | 1 ~ 2 | 命令参数 |
+
+以 `cmd=1`、`value=25`、`SEQ=16` 为例：
+
+| 步骤 | 结果 |
+| --- | --- |
+| 值 | `cmd=1`、`value=25` |
+| 定标 | 不做定标，直接取整数 |
+| 小端字节 | `25` → `19 00`；载荷 = `01 19 00`（3 字节） |
+| 帧头 | SOF=`AA`，TYPE=`03`，LEN=`03`，SEQ=`10` |
+| CRC8 | 对 `AA 03 03 10 01 19 00` 计算 → `43` |
+| 最终帧 | `AA 03 03 10 01 19 00 43` |
+
+零、典型、较大参数三种取值：
+
+| 例子 | `cmd` | `value` | 载荷（hex） | 帧（hex） |
+| --- | --- | --- | --- | --- |
+| 零命令 | 0 | 0 | `00 00 00` | `AA 03 03 00 00 00 00 A5` |
+| 典型命令 | 1 | 25 | `01 19 00` | `AA 03 03 10 01 19 00 43` |
+| 较大参数 | 2 | 1000 | `02 E8 03` | `AA 03 03 20 02 E8 03 5F` |
+
+Python：
+
+```python
+import struct
+
+import uart_frame_protocol as ufp
+
+for cmd, value, seq in ((0, 0, 0), (1, 25, 16), (2, 1000, 32)):
+    payload = struct.pack("<BH", cmd, value)  # uint8 + uint16 小端，无填充
+    print(ufp.pack(ufp.TYPE_CMD, seq, payload).hex(" ").upper())
+# AA 03 03 00 00 00 00 A5
+# AA 03 03 10 01 19 00 43
+# AA 03 03 20 02 E8 03 5F
+```
+
+C：
+
+```c
+void send_cmd(uint8_t cmd, uint16_t value, uint8_t seq)
+{
+    uint8_t payload[3];
+    uint8_t frame[UFP_FRAME_MAX];
+    size_t frame_len = 0u;
+
+    payload[0] = cmd;
+    payload[1] = (uint8_t)(value & 0xFFu);
+    payload[2] = (uint8_t)((value >> 8) & 0xFFu);
+
+    if (ufp_pack(UFP_TYPE_CMD, seq, payload, sizeof(payload),
+                 frame, sizeof(frame), &frame_len) != UFP_OK) {
+        return;
+    }
+    /* cmd=1、value=25、seq=16 时 frame_len == 8，内容为 AA 03 03 10 01 19 00 43 */
+}
+```
+
+### TEMP：0.1 °C 定标
+
+温度是 `int16`，0.1 °C/LSB：物理值乘以 10 再四舍五入。
+
+| 载荷字段 | 类型 | 字节序 | 载荷偏移 | 说明 |
+| --- | --- | --- | --- | --- |
+| `temp` | `int16` | 小端 | 0 ~ 1 | 温度，0.1 °C/LSB；`253` 表示 25.3 °C，`-50` 表示 -5.0 °C |
+
+以 -5.0 °C 为例，`SEQ=1`：
+
+| 步骤 | 结果 |
+| --- | --- |
+| 值 | -5.0 °C |
+| 定标 | -5.0 × 10 = -50 → `0xFFCE` |
+| 小端字节 | `CE FF`（2 字节） |
+| 帧头 | SOF=`AA`，TYPE=`11`，LEN=`02`，SEQ=`01` |
+| CRC8 | 对 `AA 11 02 01 CE FF` 计算 → `15` |
+| 最终帧 | `AA 11 02 01 CE FF 15` |
+
+正、负、零三个取值：
+
+| 例子 | 物理值 | 定标整数 | 十六进制 | 载荷（hex） | 帧（hex） |
+| --- | --- | --- | --- | --- | --- |
+| 正温度 | +25.3 °C | 253 | `0x00FD` | `FD 00` | `AA 11 02 00 FD 00 4B` |
+| 负温度 | -5.0 °C | -50 | `0xFFCE` | `CE FF` | `AA 11 02 01 CE FF 15` |
+| 零温度 | 0.0 °C | 0 | `0x0000` | `00 00` | `AA 11 02 02 00 00 60` |
+
+Python：
+
+```python
+import struct
+
+import uart_frame_protocol as ufp
+
+
+def temp_frame(celsius, seq):
+    scaled = int(round(celsius * 10))  # 0.1 °C/LSB
+    return ufp.pack(ufp.TYPE_TEMP, seq, struct.pack("<h", scaled))
+
+
+for celsius, seq in ((25.3, 0), (-5.0, 1), (0.0, 2)):
+    print(celsius, temp_frame(celsius, seq).hex(" ").upper())
+# 25.3 AA 11 02 00 FD 00 4B
+# -5.0 AA 11 02 01 CE FF 15
+# 0.0 AA 11 02 02 00 00 60
+```
+
+C：
+
+```c
+void send_temp(int16_t temp_deci_celsius, uint8_t seq)   /* 253 表示 25.3 °C */
+{
+    uint8_t payload[2];
+    uint8_t frame[UFP_FRAME_MAX];
+    size_t frame_len = 0u;
+
+    payload[0] = (uint8_t)((uint16_t)temp_deci_celsius & 0xFFu);
+    payload[1] = (uint8_t)(((uint16_t)temp_deci_celsius >> 8) & 0xFFu);
+
+    if (ufp_pack(UFP_TYPE_TEMP, seq, payload, sizeof(payload),
+                 frame, sizeof(frame), &frame_len) != UFP_OK) {
+        return;
+    }
+    /* temp_deci_celsius=-50、seq=1 时 frame_len == 7，内容为 AA 11 02 01 CE FF 15 */
+}
+```
 
 ## 接线与配置
 
@@ -696,7 +1007,7 @@ decoder.reset()
 
 ## 构建与检查
 
-Python 单元测试（含 6 个黄金帧的 pack/unpack/CRC 逐字节断言）：
+Python 单元测试（含 7 个黄金帧的 pack/unpack/CRC 逐字节断言）：
 
 ```bash
 cd modules/protocols/uart-frame-protocol
@@ -720,6 +1031,7 @@ gcc -std=c99 -Wall -Wextra -pedantic -Werror -I include -c your_file.c -o your_f
 | G4 | `AA 00 01 2A 00 69` | ACK 确认 SEQ=0x2A, status=OK |
 | G5 | `AA 03 03 10 01 19 00 43` | CMD cmd=1 value=25, SEQ=16 |
 | G6 | `AA 11 02 00 FD 00 4B` | TEMP temp=25.3°C, SEQ=0 |
+| G7 | `AA 02 06 00 00 00 00 00 96 00 31` | IMU_DATA gx=0 gy=0 gz=150 (1.50 °/s), SEQ=0 |
 
 ## 限制与资源
 

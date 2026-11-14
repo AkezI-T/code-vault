@@ -2,7 +2,7 @@
 
 [简体中文](README.md) | English
 
-A generic UART frame transport: a fixed 4-byte header, a variable payload and a 1-byte CRC8. Length-delimited and binary-safe, with a byte-fed receive state machine. It targets small messages between an MCU and a host (target coordinates, IMU data, commands) and does not require both ends to share a language or a chip.
+A generic UART frame transport: a fixed 4-byte header, a variable payload and a 1-byte CRC8. Length-delimited and binary-safe, with a byte-fed receive state machine. It targets small messages between an MCU and a host (target coordinates, IMU data, commands, temperatures) and does not require both ends to share a language or a chip.
 
 The transport layer only packs TYPE/LEN/SEQ/PAYLOAD into a frame, validates the CRC and splits it back into fields. Payload meaning lives in the message registry below, so adding a message type is one registry row and no transport change.
 
@@ -85,7 +85,7 @@ AA 00 01 <acknowledged SEQ> <status> <CRC8>     LEN = 1, status 0x00 = OK
 
 Which messages need an ACK is a per-type registry flag, not a transport rule:
 
-- Streaming messages (coordinates, IMU data) need no ACK; the next frame supersedes a lost one.
+- Streaming messages (coordinates, IMU data, temperatures) need no ACK; the next frame supersedes a lost one.
 - Reliable messages (`CMD`) need an ACK.
 - ACK itself is never acknowledged.
 
@@ -113,33 +113,15 @@ This version does not implement the extension: bit 7 of `TYPE` has no special me
 
 ## Message registry
 
-The registry is data, not code branches. Adding a message type is one row; the transport layer stays unchanged.
+The registry is data: adding a message is one row, the transport stays unchanged and the codec never reads the table — `pack`/`unpack` and the C `ufp_pack`/`ufp_unpack` treat every TYPE alike and only frame and validate.
 
 | TYPE | Name | Needs ACK | Payload length | Payload schema | Notes |
 | --- | --- | --- | --- | --- | --- |
 | `0x00` | ACK | no (never acknowledged) | 1 B | `status(1B)`, `0x00` = OK | SEQ holds the acknowledged frame's SEQ |
 | `0x01` | AIM_TARGET | no (streaming) | 6 B | `dx(int16 LE), dy(int16 LE), area(uint16 LE)` | Example message (demonstration only); `dx`/`dy` are offsets from the image center |
-| `0x02` | IMU_DATA | no (streaming) | reserved | undefined | To be defined from the sensor output |
-| `0x03` | CMD | yes (reliable) | reserved | undefined; example `cmd(1B) + value(uint16 LE)` | Requires an ACK |
+| `0x02` | IMU_DATA | no (streaming) | 6 B | `gx(int16 LE), gy(int16 LE), gz(int16 LE)`, 0.01 °/s per LSB | Three-axis angular rate |
+| `0x03` | CMD | yes (reliable) | 3 B | `cmd(1B) + value(uint16 LE)` | Requires an ACK |
 | `0x11` | TEMP | no (streaming) | 2 B | `temp(int16 LE)`, 0.1 °C per LSB (253 = 25.3 °C) | Example message (demonstration only) |
-
-**AIM_TARGET is an example message, not a real type.** Its 6-byte layout (two int16 coordinates plus a uint16 area or scale, all little-endian) demonstrates the frame format; `dx`/`dy` are offsets from the image center. Add real message types per the "Adding a message" section.
-
-Where that table lives in code:
-
-- C: the `UFP_TYPE_*` constants in `include/uart_frame_protocol.h`.
-- Python: the `TYPE_*` constants and `MESSAGE_REGISTRY` in `src/uart_frame_protocol.py` (name, ACK flag, fixed payload length, schema text).
-
-The codec never reads the registry: `pack`/`unpack` and the C `ufp_pack`/`ufp_unpack` treat every TYPE alike and only frame and validate.
-
-### What each column means
-
-- **TYPE**: the message id, 0..255. `0x00` is reserved for ACK; the rest are assigned as needed. Only this one byte goes on the wire, never the name.
-- **Name**: a human label that appears only in docs and code constants.
-- **Needs ACK**: whether a lost message should be retransmitted. Streaming data (coordinates, IMU) is "no" — the next frame supersedes a lost one; commands are "yes".
-- **Payload length**: the fixed payload size in bytes, or "reserved" when it varies or is undefined.
-- **Payload schema**: the name, type and byte order of every payload field. This column is what actually defines the payload layout.
-- **Notes**: extra conventions, such as what an ACK's SEQ holds.
 
 ### Adding a message
 
@@ -150,6 +132,335 @@ Adding a message only touches the registry; the frame format, CRC and state mach
 3. In C, add `#define UFP_TYPE_PING 0x10` to `uart_frame_protocol.h`.
 4. In Python, add `TYPE_PING = 0x10` and a `MessageSpec(type_id=0x10, name="PING", needs_ack=False, payload_len=0, schema="no payload")` entry to `MESSAGE_REGISTRY`.
 5. Handle the payload on each end per the schema. The transport and codec need no changes.
+
+## Concrete frame examples
+
+All five registry types are built out below: value → scaled integer → little-endian bytes → header → CRC → final frame. `ACK` is the reserved acknowledgement, `IMU_DATA` and `CMD` are defined messages, and `AIM_TARGET` and `TEMP` are example messages.
+
+### ACK: acknowledgement
+
+The payload is a single status byte; the acknowledged frame's SEQ goes in the `SEQ` field, so an ACK's `SEQ` is not its own send sequence.
+
+| Payload field | Type | Byte order | Payload offset | Notes |
+| --- | --- | --- | --- | --- |
+| `status` | `uint8` | none (single byte) | 0 | `0x00` = OK; other values are failure reasons agreed by the application |
+
+Acknowledging `SEQ=0x2A` with status `0x00`:
+
+| Step | Result |
+| --- | --- |
+| Value | acknowledged SEQ `0x2A`, status OK |
+| Scaling | one status byte, no scaling |
+| Little-endian bytes | `00` (1 payload byte) |
+| Header | SOF=`AA`, TYPE=`00`, LEN=`01`, SEQ=`2A` |
+| CRC8 | over `AA 00 01 2A 00` → `69` |
+| Final frame | `AA 00 01 2A 00 69` |
+
+Three status values:
+
+| Case | Acknowledged SEQ | `status` | Payload (hex) | Frame (hex) |
+| --- | --- | --- | --- | --- |
+| OK | `0x2A` | `0x00` | `00` | `AA 00 01 2A 00 69` |
+| Failure | `0x07` | `0x01` | `01` | `AA 00 01 07 01 29` |
+| Other reason | `0x00` | `0x02` | `02` | `AA 00 01 00 02 4B` |
+
+Python:
+
+```python
+import uart_frame_protocol as ufp
+
+for acked_seq, status in ((0x2A, 0x00), (0x07, 0x01), (0x00, 0x02)):
+    frame = ufp.pack(ufp.TYPE_ACK, acked_seq, bytes((status,)))
+    print("seq=0x%02X status=0x%02X -> %s" % (acked_seq, status, frame.hex(" ").upper()))
+# seq=0x2A status=0x00 -> AA 00 01 2A 00 69
+# seq=0x07 status=0x01 -> AA 00 01 07 01 29
+# seq=0x00 status=0x02 -> AA 00 01 00 02 4B
+```
+
+C:
+
+```c
+void send_ack(uint8_t acked_seq, uint8_t status)
+{
+    uint8_t payload[1];
+    uint8_t frame[UFP_FRAME_MAX];
+    size_t frame_len = 0u;
+
+    payload[0] = status;
+    if (ufp_pack(UFP_TYPE_ACK, acked_seq, payload, sizeof(payload),
+                 frame, sizeof(frame), &frame_len) != UFP_OK) {
+        return;
+    }
+    /* acked_seq=0x2A, status=0x00 gives frame_len == 6 and AA 00 01 2A 00 69 */
+}
+```
+
+### AIM_TARGET: offsets and area
+
+The coordinates are plain integer pixels; no scaling is applied.
+
+| Payload field | Type | Byte order | Payload offset | Notes |
+| --- | --- | --- | --- | --- |
+| `dx` | `int16` | little-endian | 0 ~ 1 | horizontal offset from the image center, positive to the right |
+| `dy` | `int16` | little-endian | 2 ~ 3 | vertical offset from the image center, positive downwards |
+| `area` | `uint16` | little-endian | 4 ~ 5 | target area or scale, unit agreed by the application |
+
+Take G2: `dx=+10`, `dy=-20`, `area=4500`, `SEQ=1`:
+
+| Step | Result |
+| --- | --- |
+| Value | `dx=+10`, `dy=-20`, `area=4500` |
+| Scaling | none; the coordinates stay integers |
+| Little-endian bytes | `10` → `0A 00`; `-20` → `EC FF`; `4500` → `94 11`; payload = `0A 00 EC FF 94 11` (6 bytes) |
+| Header | SOF=`AA`, TYPE=`01`, LEN=`06`, SEQ=`01` |
+| CRC8 | over `AA 01 06 01 0A 00 EC FF 94 11` → `82` |
+| Final frame | `AA 01 06 01 0A 00 EC FF 94 11 82` |
+
+Zero, positive and negative values:
+
+| Case | `dx` | `dy` | `area` | Payload (hex) | Frame (hex) |
+| --- | --- | --- | --- | --- | --- |
+| zero offset, area 3000 | 0 | 0 | 3000 | `00 00 00 00 B8 0B` | `AA 01 06 00 00 00 00 00 B8 0B F3` |
+| positive and negative offset | +10 | -20 | 4500 | `0A 00 EC FF 94 11` | `AA 01 06 01 0A 00 EC FF 94 11 82` |
+| all zero | 0 | 0 | 0 | `00 00 00 00 00 00` | `AA 01 06 05 00 00 00 00 00 00 8F` |
+
+Python:
+
+```python
+import struct
+
+import uart_frame_protocol as ufp
+
+for dx, dy, area, seq in ((0, 0, 3000, 0), (10, -20, 4500, 1), (0, 0, 0, 5)):
+    payload = struct.pack("<hhH", dx, dy, area)  # int16, int16, uint16, all little-endian
+    print(ufp.pack(ufp.TYPE_AIM_TARGET, seq, payload).hex(" ").upper())
+# AA 01 06 00 00 00 00 00 B8 0B F3
+# AA 01 06 01 0A 00 EC FF 94 11 82
+# AA 01 06 05 00 00 00 00 00 00 8F
+```
+
+C:
+
+```c
+void send_aim_target(int16_t dx, int16_t dy, uint16_t area, uint8_t seq)
+{
+    uint8_t payload[6];
+    uint8_t frame[UFP_FRAME_MAX];
+    size_t frame_len = 0u;
+
+    payload[0] = (uint8_t)((uint16_t)dx & 0xFFu);   /* two's complement, low byte first */
+    payload[1] = (uint8_t)(((uint16_t)dx >> 8) & 0xFFu);
+    payload[2] = (uint8_t)((uint16_t)dy & 0xFFu);
+    payload[3] = (uint8_t)(((uint16_t)dy >> 8) & 0xFFu);
+    payload[4] = (uint8_t)(area & 0xFFu);
+    payload[5] = (uint8_t)((area >> 8) & 0xFFu);
+
+    if (ufp_pack(UFP_TYPE_AIM_TARGET, seq, payload, sizeof(payload),
+                 frame, sizeof(frame), &frame_len) != UFP_OK) {
+        return;
+    }
+    /* dx=10, dy=-20, area=4500, seq=1 gives frame_len == 11 and the G2 bytes above */
+}
+```
+
+### IMU_DATA: three-axis angular rate
+
+Each axis is an `int16` at 0.01 °/s per LSB: multiply the physical value by 100.
+
+| Payload field | Type | Byte order | Payload offset | Notes |
+| --- | --- | --- | --- | --- |
+| `gx` | `int16` | little-endian | 0 ~ 1 | angular rate about X, 0.01 °/s per LSB |
+| `gy` | `int16` | little-endian | 2 ~ 3 | angular rate about Y, 0.01 °/s per LSB |
+| `gz` | `int16` | little-endian | 4 ~ 5 | angular rate about Z, 0.01 °/s per LSB; `150` means 1.50 °/s |
+
+Take `gx=0`, `gy=0`, `gz=1.50 °/s`, `SEQ=0`:
+
+| Step | Result |
+| --- | --- |
+| Value | `gx=0`, `gy=0`, `gz=1.50 °/s` |
+| Scaling | ×100: 1.50 → `150` = `0x0096`; 0 → `0x0000` |
+| Little-endian bytes | `96 00`; payload = `00 00 00 00 96 00` (6 bytes) |
+| Header | SOF=`AA`, TYPE=`02`, LEN=`06`, SEQ=`00` |
+| CRC8 | over `AA 02 06 00 00 00 00 00 96 00` → `31` |
+| Final frame | `AA 02 06 00 00 00 00 00 96 00 31` |
+
+Zero, positive and negative values:
+
+| Case | Physical (°/s) | Scaled (gx, gy, gz) | Payload (hex) | Frame (hex) |
+| --- | --- | --- | --- | --- |
+| all zero | 0 / 0 / 0 | 0 / 0 / 0 | `00 00 00 00 00 00` | `AA 02 06 02 00 00 00 00 00 00 17` |
+| gz only | 0 / 0 / 1.50 | 0 / 0 / 150 | `00 00 00 00 96 00` | `AA 02 06 00 00 00 00 00 96 00 31` |
+| negative X, positive Y | -1.00 / 2.00 / 0 | -100 / 200 / 0 | `9C FF C8 00 00 00` | `AA 02 06 01 9C FF C8 00 00 00 CB` |
+
+Python:
+
+```python
+import struct
+
+import uart_frame_protocol as ufp
+
+for gx, gy, gz, seq in ((0, 0, 0, 2), (0, 0, 150, 0), (-100, 200, 0, 1)):
+    payload = struct.pack("<hhh", gx, gy, gz)  # three int16 axes, little-endian
+    print(ufp.pack(ufp.TYPE_IMU_DATA, seq, payload).hex(" ").upper())
+# AA 02 06 02 00 00 00 00 00 00 17
+# AA 02 06 00 00 00 00 00 96 00 31
+# AA 02 06 01 9C FF C8 00 00 00 CB
+```
+
+C:
+
+```c
+void send_imu(int16_t gx, int16_t gy, int16_t gz, uint8_t seq)
+{
+    uint8_t payload[6];
+    uint8_t frame[UFP_FRAME_MAX];
+    size_t frame_len = 0u;
+
+    payload[0] = (uint8_t)((uint16_t)gx & 0xFFu);
+    payload[1] = (uint8_t)(((uint16_t)gx >> 8) & 0xFFu);
+    payload[2] = (uint8_t)((uint16_t)gy & 0xFFu);
+    payload[3] = (uint8_t)(((uint16_t)gy >> 8) & 0xFFu);
+    payload[4] = (uint8_t)((uint16_t)gz & 0xFFu);
+    payload[5] = (uint8_t)(((uint16_t)gz >> 8) & 0xFFu);
+
+    if (ufp_pack(UFP_TYPE_IMU_DATA, seq, payload, sizeof(payload),
+                 frame, sizeof(frame), &frame_len) != UFP_OK) {
+        return;
+    }
+    /* gx=0, gy=0, gz=150, seq=0 gives frame_len == 11 and AA 02 06 00 00 00 00 00 96 00 31 */
+}
+```
+
+### CMD: command and argument
+
+One command byte and a 2-byte little-endian argument. The registry marks it as needing an ACK, so the receiver answers with an ACK frame (of the form `AA 00 01 <frame SEQ> 00 <CRC>`).
+
+| Payload field | Type | Byte order | Payload offset | Notes |
+| --- | --- | --- | --- | --- |
+| `cmd` | `uint8` | none (single byte) | 0 | command number |
+| `value` | `uint16` | little-endian | 1 ~ 2 | command argument |
+
+Take `cmd=1`, `value=25`, `SEQ=16`:
+
+| Step | Result |
+| --- | --- |
+| Value | `cmd=1`, `value=25` |
+| Scaling | none; the integers go as they are |
+| Little-endian bytes | `25` → `19 00`; payload = `01 19 00` (3 bytes) |
+| Header | SOF=`AA`, TYPE=`03`, LEN=`03`, SEQ=`10` |
+| CRC8 | over `AA 03 03 10 01 19 00` → `43` |
+| Final frame | `AA 03 03 10 01 19 00 43` |
+
+Zero, typical and larger argument:
+
+| Case | `cmd` | `value` | Payload (hex) | Frame (hex) |
+| --- | --- | --- | --- | --- |
+| zero command | 0 | 0 | `00 00 00` | `AA 03 03 00 00 00 00 A5` |
+| typical command | 1 | 25 | `01 19 00` | `AA 03 03 10 01 19 00 43` |
+| larger argument | 2 | 1000 | `02 E8 03` | `AA 03 03 20 02 E8 03 5F` |
+
+Python:
+
+```python
+import struct
+
+import uart_frame_protocol as ufp
+
+for cmd, value, seq in ((0, 0, 0), (1, 25, 16), (2, 1000, 32)):
+    payload = struct.pack("<BH", cmd, value)  # uint8 then uint16, little-endian, no padding
+    print(ufp.pack(ufp.TYPE_CMD, seq, payload).hex(" ").upper())
+# AA 03 03 00 00 00 00 A5
+# AA 03 03 10 01 19 00 43
+# AA 03 03 20 02 E8 03 5F
+```
+
+C:
+
+```c
+void send_cmd(uint8_t cmd, uint16_t value, uint8_t seq)
+{
+    uint8_t payload[3];
+    uint8_t frame[UFP_FRAME_MAX];
+    size_t frame_len = 0u;
+
+    payload[0] = cmd;
+    payload[1] = (uint8_t)(value & 0xFFu);
+    payload[2] = (uint8_t)((value >> 8) & 0xFFu);
+
+    if (ufp_pack(UFP_TYPE_CMD, seq, payload, sizeof(payload),
+                 frame, sizeof(frame), &frame_len) != UFP_OK) {
+        return;
+    }
+    /* cmd=1, value=25, seq=16 gives frame_len == 8 and AA 03 03 10 01 19 00 43 */
+}
+```
+
+### TEMP: 0.1 °C scaling
+
+Temperature is an `int16` at 0.1 °C per LSB: multiply by 10 and round.
+
+| Payload field | Type | Byte order | Payload offset | Notes |
+| --- | --- | --- | --- | --- |
+| `temp` | `int16` | little-endian | 0 ~ 1 | temperature, 0.1 °C per LSB; `253` means 25.3 °C and `-50` means -5.0 °C |
+
+Take -5.0 °C with `SEQ=1`:
+
+| Step | Result |
+| --- | --- |
+| Value | -5.0 °C |
+| Scaling | -5.0 × 10 = -50 → `0xFFCE` |
+| Little-endian bytes | `CE FF` (2 bytes) |
+| Header | SOF=`AA`, TYPE=`11`, LEN=`02`, SEQ=`01` |
+| CRC8 | over `AA 11 02 01 CE FF` → `15` |
+| Final frame | `AA 11 02 01 CE FF 15` |
+
+Zero, positive and negative values:
+
+| Case | Physical | Scaled integer | Hex | Payload (hex) | Frame (hex) |
+| --- | --- | --- | --- | --- | --- |
+| positive | +25.3 °C | 253 | `0x00FD` | `FD 00` | `AA 11 02 00 FD 00 4B` |
+| negative | -5.0 °C | -50 | `0xFFCE` | `CE FF` | `AA 11 02 01 CE FF 15` |
+| zero | 0.0 °C | 0 | `0x0000` | `00 00` | `AA 11 02 02 00 00 60` |
+
+Python:
+
+```python
+import struct
+
+import uart_frame_protocol as ufp
+
+
+def temp_frame(celsius, seq):
+    scaled = int(round(celsius * 10))  # 0.1 °C per LSB
+    return ufp.pack(ufp.TYPE_TEMP, seq, struct.pack("<h", scaled))
+
+
+for celsius, seq in ((25.3, 0), (-5.0, 1), (0.0, 2)):
+    print(celsius, temp_frame(celsius, seq).hex(" ").upper())
+# 25.3 AA 11 02 00 FD 00 4B
+# -5.0 AA 11 02 01 CE FF 15
+# 0.0 AA 11 02 02 00 00 60
+```
+
+C:
+
+```c
+void send_temp(int16_t temp_deci_celsius, uint8_t seq)   /* 253 means 25.3 °C */
+{
+    uint8_t payload[2];
+    uint8_t frame[UFP_FRAME_MAX];
+    size_t frame_len = 0u;
+
+    payload[0] = (uint8_t)((uint16_t)temp_deci_celsius & 0xFFu);
+    payload[1] = (uint8_t)(((uint16_t)temp_deci_celsius >> 8) & 0xFFu);
+
+    if (ufp_pack(UFP_TYPE_TEMP, seq, payload, sizeof(payload),
+                 frame, sizeof(frame), &frame_len) != UFP_OK) {
+        return;
+    }
+    /* temp_deci_celsius=-50, seq=1 gives frame_len == 7 and AA 11 02 01 CE FF 15 */
+}
+```
 
 ## Wiring and configuration
 
@@ -696,7 +1007,7 @@ decoder.reset()
 
 ## Build and checks
 
-Python unit tests, including byte-exact pack/unpack/CRC assertions for the six golden frames:
+Python unit tests, including byte-exact pack/unpack/CRC assertions for the seven golden frames:
 
 ```bash
 cd modules/protocols/uart-frame-protocol
@@ -720,6 +1031,7 @@ Golden frames shared by both implementations:
 | G4 | `AA 00 01 2A 00 69` | ACK for SEQ=0x2A, status=OK |
 | G5 | `AA 03 03 10 01 19 00 43` | CMD cmd=1 value=25, SEQ=16 |
 | G6 | `AA 11 02 00 FD 00 4B` | TEMP temp=25.3°C, SEQ=0 |
+| G7 | `AA 02 06 00 00 00 00 00 96 00 31` | IMU_DATA gx=0 gy=0 gz=150 (1.50 °/s), SEQ=0 |
 
 ## Limits and resources
 

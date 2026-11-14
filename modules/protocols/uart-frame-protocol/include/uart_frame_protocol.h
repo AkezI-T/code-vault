@@ -30,6 +30,7 @@
  *   G4  AA 00 01 2A 00 69                  ACK for SEQ=0x2A, status=OK
  *   G5  AA 03 03 10 01 19 00 43            CMD cmd=1 value=25,           SEQ=16
  *   G6  AA 11 02 00 FD 00 4B               TEMP temp=253 (25.3 degC), SEQ=0
+ *   G7  AA 02 06 00 00 00 00 00 96 00 31   IMU_DATA gx=0 gy=0 gz=150, SEQ=0
  *
  * C99, header-only, depends on <stdint.h> and <stddef.h> only.
  */

@@ -94,15 +94,16 @@ MESSAGE_REGISTRY: Dict[int, MessageSpec] = {
         type_id=TYPE_IMU_DATA,
         name="IMU_DATA",
         needs_ack=False,
-        payload_len=None,
-        schema="reserved, undefined",
+        payload_len=6,
+        schema="gx(int16 LE), gy(int16 LE), gz(int16 LE), "
+               "0.01 deg/s per LSB; three-axis angular rate",
     ),
     TYPE_CMD: MessageSpec(
         type_id=TYPE_CMD,
         name="CMD",
         needs_ack=True,
-        payload_len=None,
-        schema="reserved, undefined; example cmd(1B) + value(uint16 LE)",
+        payload_len=3,
+        schema="cmd(1B) + value(uint16 LE)",
     ),
     TYPE_TEMP: MessageSpec(
         type_id=TYPE_TEMP,

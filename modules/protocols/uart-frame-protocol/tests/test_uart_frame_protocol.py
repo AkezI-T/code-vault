@@ -68,6 +68,13 @@ GOLDEN_FRAMES = (
         _hex("FD 00"),
         "G6 TEMP temp=253 (25.3 degC)",
     ),
+    (
+        "AA 02 06 00 00 00 00 00 96 00 31",
+        ufp.TYPE_IMU_DATA,
+        0,
+        _hex("00 00 00 00 96 00"),
+        "G7 IMU_DATA gx=0 gy=0 gz=150 (1.50 deg/s)",
+    ),
 )
 
 
@@ -278,6 +285,22 @@ class TempExampleTest(unittest.TestCase):
         self.assertEqual(spec.payload_len, 2)
         self.assertFalse(spec.needs_ack)
         self.assertIn("example", spec.schema)
+
+
+class ImuExampleTest(unittest.TestCase):
+    def test_imu_is_six_byte_angular_rate(self):
+        wire = _hex("AA 02 06 00 00 00 00 00 96 00 31")
+        payload = struct.pack("<hhh", 0, 0, 150)  # 0.01 deg/s per LSB
+        self.assertEqual(ufp.pack(ufp.TYPE_IMU_DATA, 0, payload), wire)
+
+        frame = ufp.unpack(wire)
+        self.assertEqual(frame.type, ufp.TYPE_IMU_DATA)
+        self.assertEqual(struct.unpack("<hhh", frame.payload), (0, 0, 150))
+
+        spec = ufp.MESSAGE_REGISTRY[ufp.TYPE_IMU_DATA]
+        self.assertEqual(spec.payload_len, 6)
+        self.assertFalse(spec.needs_ack)
+        self.assertIn("0.01", spec.schema)
 
 
 if __name__ == "__main__":
