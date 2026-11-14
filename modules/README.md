@@ -10,6 +10,7 @@
 | --- | --- |
 | [microcontrollers/](microcontrollers/README.md) | 可复用的单片机固件模块 |
 | [control/](control/README.md) | 芯片无关的控制与运动算法 |
+| [protocols/](protocols/README.md) | 跨芯片、跨语言的通信协议与编解码器 |
 
 ## 模块
 
@@ -28,5 +29,6 @@
 | mspm0g3507 | [i2c-spi-ssd1306](microcontrollers/mspm0g3507/i2c-spi-ssd1306/README.md) | C | 可接入 I2C/SPI 的 SSD1306 显示核心 |
 | k230 | [alpha-beta-tracker](microcontrollers/k230/alpha-beta-tracker/README.md) | Python | 可配置一维位置与速度估计 |
 | — | [pid-controller](control/pid-controller/README.md) | C | 定点 PID 控制器：比例、积分、测量值微分、死区、限幅、低通与方向 |
+| — | [uart-frame-protocol](protocols/uart-frame-protocol/README.md) | C + Python | 通用 UART 帧传输：定长头 + 变长载荷 + CRC8，含编解码与逐字节接收状态机 |
 
 文件存放规则见 [docs/architecture.md](../docs/architecture.md)，模块使用说明模板见 [docs/module-template.md](../docs/module-template.md)。

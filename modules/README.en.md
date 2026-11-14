@@ -10,6 +10,7 @@ Store reusable code at `<domain>/<module-name>/`. Each module owns its source, p
 | --- | --- |
 | [microcontrollers/](microcontrollers/README.en.md) | Reusable microcontroller firmware modules |
 | [control/](control/README.en.md) | Chip-agnostic control and motion algorithms |
+| [protocols/](protocols/README.en.md) | Cross-chip, cross-language communication protocols and codecs |
 
 ## Modules
 
@@ -28,5 +29,6 @@ Store reusable code at `<domain>/<module-name>/`. Each module owns its source, p
 | mspm0g3507 | [i2c-spi-ssd1306](microcontrollers/mspm0g3507/i2c-spi-ssd1306/README.en.md) | C | SSD1306 display core with I2C/SPI transport callbacks |
 | k230 | [alpha-beta-tracker](microcontrollers/k230/alpha-beta-tracker/README.en.md) | Python | Configurable one-dimensional position and velocity estimation |
 | — | [pid-controller](control/pid-controller/README.en.md) | C | Fixed-point PID: proportional, integral, measurement derivative, deadzone, clamping, low-pass and direction |
+| — | [uart-frame-protocol](protocols/uart-frame-protocol/README.en.md) | C + Python | Generic UART frame transport: fixed header + variable payload + CRC8, with codecs and a byte-fed receive state machine |
 
 See [docs/architecture.md](../docs/architecture.md) for file placement and [docs/module-template.md](../docs/module-template.md) for the module documentation template.
