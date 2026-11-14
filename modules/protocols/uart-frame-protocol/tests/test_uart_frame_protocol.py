@@ -238,10 +238,10 @@ class RegistryTest(unittest.TestCase):
         frame = ufp.unpack(_hex(GOLDEN_FRAMES[3][0]))
         self.assertEqual(frame.payload, b"\x00")
 
-    def test_aim_target_is_six_bytes_and_semantics_tbd(self):
+    def test_aim_target_is_six_bytes_example_message(self):
         spec = ufp.MESSAGE_REGISTRY[ufp.TYPE_AIM_TARGET]
         self.assertEqual(spec.payload_len, 6)
-        self.assertIn("TBD", spec.schema)
+        self.assertIn("example", spec.schema)
 
     def test_every_golden_type_is_registered(self):
         for _wire, frame_type, _seq, _payload, _note in GOLDEN_FRAMES:

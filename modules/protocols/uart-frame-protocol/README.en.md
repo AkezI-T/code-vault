@@ -85,7 +85,7 @@ AA 00 01 <acknowledged SEQ> <status> <CRC8>     LEN = 1, status 0x00 = OK
 
 Which messages need an ACK is a per-type registry flag, not a transport rule:
 
-- Streaming messages (`AIM_TARGET`, `IMU_DATA`) need no ACK; the next frame supersedes a lost one.
+- Streaming messages (coordinates, IMU data) need no ACK; the next frame supersedes a lost one.
 - Reliable messages (`CMD`) need an ACK.
 - ACK itself is never acknowledged.
 
@@ -118,11 +118,11 @@ The registry is data, not code branches. Adding a message type is one row; the t
 | TYPE | Name | Needs ACK | Payload length | Payload schema | Notes |
 | --- | --- | --- | --- | --- | --- |
 | `0x00` | ACK | no (never acknowledged) | 1 B | `status(1B)`, `0x00` = OK | SEQ holds the acknowledged frame's SEQ |
-| `0x01` | AIM_TARGET | no (streaming) | 6 B | `dx(int16 LE), dy(int16 LE), area(uint16 LE)` | Coordinate semantics are **TBD**: relative offset or absolute, to be decided when needed |
+| `0x01` | AIM_TARGET | no (streaming) | 6 B | `dx(int16 LE), dy(int16 LE), area(uint16 LE)` | Example message (demonstration only); `dx`/`dy` are offsets from the image center |
 | `0x02` | IMU_DATA | no (streaming) | reserved | undefined | To be defined from the sensor output |
 | `0x03` | CMD | yes (reliable) | reserved | undefined; example `cmd(1B) + value(uint16 LE)` | Requires an ACK |
 
-**AIM_TARGET coordinate semantics are marked TBD.** Only the 6-byte layout is agreed (two int16 coordinates plus a uint16 area or scale, all little-endian); whether `dx`/`dy` are relative offsets or absolute coordinates is undecided, so consumers must not assume either interpretation.
+**AIM_TARGET is an example message, not a real type.** Its 6-byte layout (two int16 coordinates plus a uint16 area or scale, all little-endian) demonstrates the frame format; `dx`/`dy` are offsets from the image center. Add real message types per the "Adding a message" section.
 
 Where that table lives in code:
 
@@ -727,5 +727,5 @@ Golden frames shared by both implementations:
 - The idle timeout is not implemented in the protocol layer; the caller must run a timer and call reset, otherwise a partial frame holds the decoder indefinitely.
 - CRC8 detects errors on short frames in a low-noise link only; no bit-error-rate analysis was done, so noisy links should add application-level confirmation or a stronger checksum.
 - No allocation and no I/O: port reads and writes stay in the platform adapter.
-- AIM_TARGET `dx`/`dy` coordinate semantics (relative offset vs absolute) are TBD; the decision updates the registry and the consumers only.
+- AIM_TARGET is an example message only; real message types are added per the registry section when needed.
 - No third-party code or resources; both the C and Python implementations were written here.

@@ -86,7 +86,7 @@ MESSAGE_REGISTRY: Dict[int, MessageSpec] = {
         needs_ack=False,
         payload_len=6,
         schema="dx(int16 LE), dy(int16 LE), area(uint16 LE); "
-               "coordinate semantics TBD (relative offset vs absolute)",
+               "example message, dx/dy are offsets from the image center",
     ),
     TYPE_IMU_DATA: MessageSpec(
         type_id=TYPE_IMU_DATA,
